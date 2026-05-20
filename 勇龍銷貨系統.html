@@ -1,0 +1,2097 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>勇龍有限公司 銷貨管理系統</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans CJK TC",sans-serif;font-size:13px;background:#f4f6f9;color:#2d2d2d;min-height:100vh}
+#root{display:flex;flex-direction:column;min-height:100vh}
+.navbar{background:#1a2744;color:#fff;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.navbar-brand{font-size:16px;font-weight:600;color:#f5d98a;letter-spacing:1px}
+.navbar-sub{font-size:11px;color:#8fa8c8;margin-top:2px}
+.nav-tabs{display:flex;gap:2px;padding:10px 16px 0;background:#fff;border-bottom:1px solid #dde3ec}
+.nav-tab{padding:8px 18px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px;color:#666;border:1px solid transparent;border-bottom:none;background:transparent;transition:all .15s}
+.nav-tab:hover{background:#f0f4f8;color:#333}
+.nav-tab.active{background:#fff;color:#1a2744;border-color:#dde3ec;font-weight:500;margin-bottom:-1px}
+.content{flex:1;padding:16px 20px;max-width:1200px;margin:0 auto;width:100%}
+.card{background:#fff;border:1px solid #dde3ec;border-radius:10px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.card-title{font-size:14px;font-weight:500;color:#1a2744;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #eef1f6}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;border:1px solid #ccd2dc;background:#fff;cursor:pointer;font-size:12px;color:#444;transition:all .15s;font-family:inherit}
+.btn:hover{background:#f0f4f8;border-color:#99a8bc}
+.btn-primary{background:#1a2744;color:#fff;border-color:#1a2744}
+.btn-primary:hover{background:#243660}
+.btn-gold{background:#c9a84c;color:#fff;border-color:#c9a84c;font-weight:500}
+.btn-gold:hover{background:#b8963e}
+.btn-sm{padding:4px 10px;font-size:11px}
+.btn-danger{color:#c0392b;border-color:#e8b4b4}
+.btn-danger:hover{background:#fdf2f2}
+label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+input,select,textarea{width:100%;padding:7px 10px;border:1px solid #ccd2dc;border-radius:6px;font-size:12px;background:#fff;color:#2d2d2d;font-family:inherit;transition:border .15s}
+input:focus,select:focus{outline:none;border-color:#1a2744;box-shadow:0 0 0 3px rgba(26,39,68,.1)}
+.form-grid{display:grid;gap:12px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+.g4{grid-template-columns:1fr 1fr 1fr 1fr}
+table.data{width:100%;border-collapse:collapse;font-size:12px}
+table.data th{background:#1a2744;color:#fff;padding:8px 10px;text-align:left;font-weight:500;white-space:nowrap}
+table.data td{padding:7px 10px;border-bottom:1px solid #eef1f6;vertical-align:middle}
+table.data tr:hover td{background:#f8fafd}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge-blue{background:#e6f1fb;color:#0c447c}
+.badge-green{background:#eaf3de;color:#3b6d11}
+.badge-gold{background:#faeeda;color:#854f0b}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.stat-card{background:#fff;border:1px solid #dde3ec;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-val{font-size:22px;font-weight:500;color:#1a2744}
+.stat-lbl{font-size:11px;color:#888;margin-top:4px}
+.items-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.items-table th{background:#eef2f8;padding:6px 8px;text-align:center;border:1px solid #dde3ec;font-weight:500;font-size:11px}
+.items-table td{padding:5px 6px;border:1px solid #eef1f6;text-align:center;vertical-align:middle}
+.items-table input,.items-table select{padding:4px 6px;font-size:11px;border-radius:4px}
+.modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:12px;padding:24px;width:92%;max-width:760px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,.2)}
+.modal-title{font-size:15px;font-weight:500;margin-bottom:16px;color:#1a2744;display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid #eef1f6}
+.empty{text-align:center;color:#999;padding:50px;font-size:14px}
+.section-hdr{font-size:12px;font-weight:500;color:#1a2744;margin:12px 0 8px;padding-bottom:5px;border-bottom:1px solid #eef1f6}
+.print-hint{font-size:11px;color:#666;background:#f8fafd;padding:8px 12px;border-radius:6px;margin-bottom:10px;border-left:3px solid #c9a84c}
+@media print{
+  @page{size:25.7cm 36.4cm;margin:0}
+  .navbar,.nav-tabs,.btn,.modal-bg{display:none!important}
+  .content{padding:0;max-width:100%}
+}
+@media(max-width:768px){
+  .stat-grid{grid-template-columns:repeat(2,1fr)}
+  .g3,.g4{grid-template-columns:1fr 1fr}
+  .g2{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const{useState,useEffect}=React;
+
+/* ===== CONSTANTS ===== */
+const COMPANY={name:'勇龍有限公司',nameEn:'YEONG LONG Ltd',addr:'244 新北市林口區八德路30號1樓',tel:'02-26085360 / 0972935969',line:'0972935969'};
+const PRODS=['ㄇ 6*6*6','h 6*6*7','L型 6*6*6','L型 6*6*7','五角 6*6*6','運費','L角配件','人工費'];
+const INIT_PRODS=[
+  {id:'p1',name:'ㄇ 6*6*6'},
+  {id:'p2',name:'h 6*6*7'},
+  {id:'p3',name:'L型 6*6*6'},
+  {id:'p4',name:'L型 6*6*7'},
+  {id:'p5',name:'五角 6*6*6'},
+  {id:'p6',name:'運費'},
+  {id:'p7',name:'L角配件'},
+  {id:'p8',name:'人工費'},
+];
+const COLORS=['白','黑','牙','白銀狐','黑銀狐','灰銀狐','黑白花','金絲黃','墨雲石'];
+const PCAT={'ㄇ 6*6*6':'ㄇ666','h 6*6*7':'h667','L型 6*6*6':'L型666','L型 6*6*7':'L型667','五角 6*6*6':'五角666'};
+const STD={'ㄇ666':3.5,'h667':3.7,'L型666':3.7,'L型667':3.9,'五角666':3.7};
+const INIT_C=[
+  {id:'c00',name:'勇龍',contact:'勇龍',phone:'02-26085360',address:'244 新北市林口區八德路30號1樓'},
+  {id:'c01',name:'佳成',contact:'謝丞典',phone:'0956-334-455',address:'新北市林口區林口路143號'},
+  {id:'c02',name:'張金隆',contact:'張金隆',phone:'0939-314-292',address:'宜蘭縣蘇澳鎮中原路224號'},
+  {id:'c03',name:'萬誠磁磚裝璜行',contact:'萬誠',phone:'02-2431-3542',address:'基隆市安樂區基金一路196-1號'},
+  {id:'c04',name:'百祥五金建材行',contact:'林詩鑑',phone:'02-2507-1697',address:'台北市建國北路二段29-3號'},
+  {id:'c05',name:'建益建材行',contact:'許大福',phone:'0910-275-633',address:'新北市板橋區溪崑二街57號'},
+  {id:'c06',name:'正益建材行',contact:'江文益',phone:'0937-718-749',address:'新北市三芝區忠孝街177號1樓'},
+  {id:'c07',name:'龍江五金建材行',contact:'蘇小姐',phone:'02-2501-2285',address:'臺北市中山區龍江路200之3號'},
+  {id:'c08',name:'鍵祥塑膠',contact:'鍵祥',phone:'0928-220-318',address:'新北市八里區頂寮二街72巷27之2號'},
+  {id:'c09',name:'天丁建材行',contact:'林添丁',phone:'02-2918-2291',address:'新北市新店區順安街17號'},
+  {id:'c10',name:'榮進建材行',contact:'陳先生',phone:'02-2738-2030',address:'台北市大安區通化街105號'},
+  {id:'c11',name:'聖元建材',contact:'聖元',phone:'02-2992-1652',address:'新北市新莊區公園路186號'},
+  {id:'c12',name:'進來建材行',contact:'周玫玲',phone:'0934-162-868',address:'新北市板橋區篤行路二段95號'},
+  {id:'c13',name:'樹盛五金建材行',contact:'劉樹德',phone:'0937-886-085',address:'新北市中和區秀朗路三段135巷4號1樓'},
+  {id:'c14',name:'源鎰五金建材行',contact:'劉樹德',phone:'0937-886-086',address:'新北市中和區秀朗路三段135巷4號1樓'},
+  {id:'c15',name:'廣達好企業有限公司',contact:'廣達好',phone:'0932-224-621',address:'新北市板橋區僑中二街12巷36號'},
+  {id:'c16',name:'利陞建材有限公司',contact:'鄭震庚',phone:'0910-301-335',address:'新北市樹林區保安二街70號'},
+  {id:'c17',name:'明輝建材磁磚行',contact:'蕭明輝',phone:'0910-199-977',address:'新北市泰山區美寧街120號'},
+  {id:'c18',name:'爵陽衛浴企業有限公司',contact:'爵陽衛浴',phone:'03-211-5095',address:'桃園縣龜山鄉大湖村文三三街39巷5號1樓'},
+  {id:'c19',name:'福星建業有限公司',contact:'孫永裕',phone:'0935-427-888',address:'台北市內湖區內湖路二段63巷15弄7號4F'},
+  {id:'c20',name:'萬象藝術玻璃',contact:'吳建隆',phone:'0935-060-227',address:'桃園市八德區東勇街489巷49號'},
+  {id:'c21',name:'富泰建材行',contact:'張美滿',phone:'0932-362-466',address:'新北市三峽區中山路134號'},
+  {id:'c22',name:'欣泰建材行',contact:'陳麗玉',phone:'0966-125-650',address:'新北市永和區中山路一段139號1樓'},
+  {id:'c23',name:'慶峰建材行',contact:'慶峰',phone:'02-2682-1229',address:'新北市樹林區保安二街53號1樓'},
+  {id:'c24',name:'昱池國際有限公司',contact:'昱池',phone:'0937-510-457',address:'桃園市中壢區環中東路359之5號'},
+  {id:'c25',name:'歐居精品瓷磚有限公司',contact:'郭耀臨',phone:'0982-256-901',address:'桃園市桃園區國際路二段493號'},
+  {id:'c26',name:'全佑建材行',contact:'葉祐誠',phone:'0928-614-092',address:'基隆市信義區深溪路137號'},
+  {id:'c27',name:'北新門窗建材行',contact:'高源興',phone:'0935-584-360',address:'新北市新莊區新泰路468號'},
+  {id:'c28',name:'楊元信',contact:'楊元信',phone:'0909-302-112',address:'新北市三重區仁義街241巷33號2樓'},
+  {id:'c29',name:'小劉',contact:'小劉',phone:'0918-115-918',address:'桃園市龜山區文七五街16號'},
+  {id:'c30',name:'中華建材行',contact:'陳芳彬',phone:'0937-359-358',address:'嘉義縣民雄鄉福興村牛稠溪1-37號附6'},
+  {id:'c31',name:'東楙企業有限公司',contact:'陳芳彬',phone:'0937-359-358',address:'嘉義縣民雄鄉福興村牛稠溪1-37號附6'},
+  {id:'c32',name:'中華精品建材有限公司',contact:'陳芳彬',phone:'0937-359-359',address:'嘉義縣民雄鄉福興村牛稠溪1-37號附6'},
+  {id:'c33',name:'金柏隆衛浴材料行',contact:'何金生',phone:'0937-119-268',address:'桃園市桃園區民有八街2之1號'},
+  {id:'c34',name:'源駿建材磁磚公司',contact:'洪源隆',phone:'0911-310-054',address:'新北市板橋區長安街212號1樓'},
+  {id:'c35',name:'浮洲建材行',contact:'董洸廷',phone:'0927-033-199',address:'新北市板橋區大觀路二段68號'},
+  {id:'c36',name:'長成建材有限公司',contact:'莊容蓁',phone:'06-2663-839',address:'台南市仁德區保安路一段90之20號'},
+  {id:'c37',name:'豐益建材行',contact:'薛國忠',phone:'0932-135-826',address:'臺北市士林區延平北路5段188號'},
+  {id:'c38',name:'詮豪建材五金行',contact:'朱有利',phone:'02-2940-0115',address:'新北市中和區景新街224之6號1樓'},
+  {id:'c39',name:'華順億企業有限公司',contact:'黃朝文',phone:'0937-510-457',address:'新北市中和區中山路二段266號1樓'},
+  {id:'c40',name:'瑞和建材行',contact:'曹昌榮',phone:'',address:'新北市土城區金城路三段133號1樓'},
+  {id:'c41',name:'志源建材行',contact:'王志源',phone:'0933-733-326',address:'新北市土城區金門街383號'},
+  {id:'c42',name:'台昌建材五金行',contact:'游金聰',phone:'0933-042-319',address:'新北市土城區中央路三段151號'},
+  {id:'c43',name:'步步高企業行',contact:'許功明',phone:'0911-388-446',address:'新北市三重區中華路76巷35號3號'},
+  {id:'c44',name:'三芝建材行',contact:'章美珠',phone:'0933-796-982',address:'新北市三芝區古庄里四棧橋44號'},
+  {id:'c45',name:'偉特磁磚有限公司',contact:'洪文昌',phone:'0927-633-688',address:'新北市土城區中央路一段33號1樓'},
+  {id:'c46',name:'鑫鎧棋磁磚精品',contact:'鑫鎧棋',phone:'0920-811-698',address:'新北市汐止區康寧街358號'},
+  {id:'c47',name:'永大大理石',contact:'林光弟',phone:'0912-203-948',address:'台北市延平北路8段188號'},
+  {id:'c48',name:'寶麗石業社',contact:'高小姐',phone:'05-5515095',address:'雲林縣斗六市溪洲里竹圍路138號'},
+  {id:'c49',name:'原承塑膠',contact:'',phone:'',address:''},
+  {id:'c50',name:'日峰企業社',contact:'日峰',phone:'',address:''},
+];
+const INIT_P={
+  '佳成':{'ㄇ666':2.8,'h667':3.0,'L型666':3.0,'L型667':3.2,'五角666':3.0},
+  '張金隆':{'ㄇ666':3.0,'h667':3.2,'L型666':3.2,'L型667':3.4,'五角666':3.2},
+  '富泰建材行':{...STD},'萬誠磁磚裝璜行':{...STD},
+  '正益建材行':{'ㄇ666':3.7,'h667':3.9,'L型666':3.9,'L型667':4.1,'五角666':3.9},
+  '萬象藝術玻璃':{'ㄇ666':3.8,'h667':4.0,'L型666':4.0,'L型667':4.2,'五角666':4.0},
+  '百祥五金建材行':{'ㄇ666':3.6,'h667':4.0,'L型666':3.8,'L型667':4.2,'五角666':3.8},
+  '聖元建材':{'ㄇ666':3.0,'h667':3.2,'L型666':3.2,'L型667':3.4,'五角666':3.2},
+};
+INIT_C.forEach(c=>{if(!INIT_P[c.name])INIT_P[c.name]={...STD};});
+const INIT_COSTS={'ㄇ666':1.5,'h667':1.7,'L型666':1.7,'L型667':1.9,'五角666':1.7};
+const INIT_PURCHASES=[];
+const INIT_ORDERS=[
+  {id:'o01',customerId:'c03',date:'2026-05-05',orderNumber:'1150505',extras:[],shipping:0,note:'',
+   total:4019,items:[
+    {no:1,id:'i1a',product:'ㄇ 6*6*6',color:'白',size:150,qty:1,unitPrice:3.5,amount:525},
+    {no:2,id:'i1b',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:3,id:'i1c',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:4,id:'i1d',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:5,id:'i1e',product:'ㄇ 6*6*6',color:'牙',size:170,qty:1,unitPrice:3.5,amount:595},
+  ]},
+  {id:'o02',customerId:'c01',date:'2026-05-04',orderNumber:'1150504',extras:[],shipping:0,note:'',
+   total:12166,items:[
+    {no:1,id:'i2a',product:'ㄇ 6*6*6',color:'牙',size:325,qty:10,unitPrice:2.8,amount:9100},
+    {no:2,id:'i2b',product:'ㄇ 6*6*6',color:'牙',size:365,qty:3,unitPrice:2.8,amount:3066},
+  ]},
+  {id:'o03',customerId:'c17',date:'2026-05-06',orderNumber:'1150506',extras:[],shipping:0,note:'',
+   total:3325,items:[
+    {no:1,id:'i3a',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.5,amount:1050},
+    {no:2,id:'i3b',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:3,id:'i3c',product:'ㄇ 6*6*6',color:'牙',size:160,qty:3,unitPrice:3.5,amount:1680},
+  ]},
+  {id:'o04',customerId:'c01',date:'2026-05-06',orderNumber:'1150506',extras:[],shipping:0,note:'',
+   total:10424,items:[
+    {no:1,id:'i4a',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.0,amount:960},
+    {no:2,id:'i4b',product:'ㄇ 6*6*6',color:'白',size:140,qty:4,unitPrice:2.8,amount:1568},
+    {no:3,id:'i4c',product:'ㄇ 6*6*6',color:'白',size:160,qty:4,unitPrice:2.8,amount:1792},
+    {no:4,id:'i4d',product:'ㄇ 6*6*6',color:'白',size:170,qty:4,unitPrice:2.8,amount:1904},
+    {no:5,id:'i4e',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:2.8,amount:1008},
+    {no:6,id:'i4f',product:'ㄇ 6*6*6',color:'白',size:190,qty:2,unitPrice:2.8,amount:1064},
+    {no:7,id:'i4g',product:'ㄇ 6*6*6',color:'白',size:200,qty:2,unitPrice:2.8,amount:1120},
+    {no:8,id:'i4h',product:'ㄇ 6*6*6',color:'牙',size:180,qty:2,unitPrice:2.8,amount:1008},
+  ]},
+  {id:'o05',customerId:'c02',date:'2026-05-06',orderNumber:'1150506',extras:[],shipping:0,note:'',
+   total:3600,items:[
+    {no:1,id:'i5a',product:'ㄇ 6*6*6',color:'黑',size:150,qty:8,unitPrice:3.0,amount:3600},
+  ]},
+  {id:'o06',customerId:'c04',date:'2026-05-12',orderNumber:'1150512',extras:[],shipping:0,note:'',
+   total:5400,items:[
+    {no:1,id:'i6a',product:'ㄇ 6*6*6',color:'黑',size:90,qty:1,unitPrice:3.6,amount:324},
+    {no:2,id:'i6b',product:'ㄇ 6*6*6',color:'黑',size:140,qty:1,unitPrice:3.6,amount:504},
+    {no:3,id:'i6c',product:'ㄇ 6*6*6',color:'黑',size:170,qty:1,unitPrice:3.6,amount:612},
+    {no:4,id:'i6d',product:'ㄇ 6*6*6',color:'黑',size:200,qty:1,unitPrice:3.6,amount:720},
+    {no:5,id:'i6e',product:'ㄇ 6*6*6',color:'白',size:90,qty:2,unitPrice:3.6,amount:648},
+    {no:6,id:'i6f',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.6,amount:612},
+    {no:7,id:'i6g',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:3.6,amount:1296},
+    {no:8,id:'i6h',product:'ㄇ 6*6*6',color:'白',size:190,qty:1,unitPrice:3.6,amount:684},
+  ]},
+  {id:'o07',customerId:'c01',date:'2026-05-13',orderNumber:'1150513',extras:[],shipping:0,note:'',
+   total:9492,items:[
+    {no:1,id:'i7a',product:'ㄇ 6*6*6',color:'牙',size:150,qty:1,unitPrice:2.8,amount:420},
+    {no:2,id:'i7b',product:'ㄇ 6*6*6',color:'牙',size:160,qty:2,unitPrice:2.8,amount:896},
+    {no:3,id:'i7c',product:'ㄇ 6*6*6',color:'白',size:130,qty:2,unitPrice:2.8,amount:728},
+    {no:4,id:'i7d',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:2.8,amount:840},
+    {no:5,id:'i7e',product:'ㄇ 6*6*6',color:'白',size:160,qty:6,unitPrice:2.8,amount:2688},
+    {no:6,id:'i7f',product:'ㄇ 6*6*6',color:'白',size:170,qty:4,unitPrice:2.8,amount:1904},
+    {no:7,id:'i7g',product:'ㄇ 6*6*6',color:'白',size:180,qty:4,unitPrice:2.8,amount:2016},
+  ]},
+  {id:'o08',customerId:'c01',date:'2026-05-14',orderNumber:'1150514',extras:[],shipping:0,note:'',
+   total:1200,items:[
+    {no:1,id:'i8a',product:'h 6*6*7',color:'黑',size:200,qty:2,unitPrice:3.0,amount:1200},
+  ]},
+  {id:'o09',customerId:'c06',date:'2026-05-15',orderNumber:'1150515',extras:[],shipping:0,note:'',
+   total:13347,items:[
+    {no:1,id:'i9a',product:'ㄇ 6*6*6',color:'白',size:70,qty:6,unitPrice:3.7,amount:1554},
+    {no:2,id:'i9b',product:'ㄇ 6*6*6',color:'白',size:150,qty:6,unitPrice:3.7,amount:3330},
+    {no:3,id:'i9c',product:'ㄇ 6*6*6',color:'白',size:160,qty:6,unitPrice:3.7,amount:3552},
+    {no:4,id:'i9d',product:'ㄇ 6*6*6',color:'牙',size:160,qty:3,unitPrice:3.7,amount:1776},
+    {no:5,id:'i9e',product:'ㄇ 6*6*6',color:'牙',size:170,qty:3,unitPrice:3.7,amount:1887},
+    {no:6,id:'i9f',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.9,amount:1248},
+  ]},
+  // ===== 202604 =====
+  {id:'d01',customerId:'c07',date:'2026-04-09',orderNumber:'1150409',extras:[],shipping:0,note:'',
+   total:12320,items:[
+    {no:1,id:'d1a',product:'ㄇ 6*6*6',color:'白',size:140,qty:4,unitPrice:3.5,amount:1960},
+    {no:2,id:'d1b',product:'ㄇ 6*6*6',color:'白',size:170,qty:4,unitPrice:3.5,amount:2380},
+    {no:3,id:'d1c',product:'ㄇ 6*6*6',color:'白',size:180,qty:6,unitPrice:3.5,amount:3780},
+    {no:4,id:'d1d',product:'ㄇ 6*6*6',color:'白',size:200,qty:6,unitPrice:3.5,amount:4200},
+  ]},
+  {id:'d02',customerId:'c02',date:'2026-04-09',orderNumber:'1150409',extras:[],shipping:0,note:'',
+   total:21510,items:[
+    {no:1,id:'d2a',product:'ㄇ 6*6*6',color:'白',size:120,qty:6,unitPrice:3.0,amount:2160},
+    {no:2,id:'d2b',product:'ㄇ 6*6*6',color:'白',size:130,qty:6,unitPrice:3.0,amount:2340},
+    {no:3,id:'d2c',product:'ㄇ 6*6*6',color:'白',size:160,qty:6,unitPrice:3.0,amount:2880},
+    {no:4,id:'d2d',product:'ㄇ 6*6*6',color:'白',size:170,qty:6,unitPrice:3.0,amount:3060},
+    {no:5,id:'d2e',product:'ㄇ 6*6*6',color:'白',size:180,qty:6,unitPrice:3.0,amount:3240},
+    {no:6,id:'d2f',product:'ㄇ 6*6*6',color:'白',size:270,qty:3,unitPrice:3.0,amount:2430},
+    {no:7,id:'d2g',product:'ㄇ 6*6*6',color:'白',size:300,qty:6,unitPrice:3.0,amount:5400},
+  ]},
+  {id:'d03',customerId:'c03',date:'2026-04-09',orderNumber:'1150409',extras:[],shipping:0,note:'',
+   total:9680,items:[
+    {no:1,id:'d3a',product:'ㄇ 6*6*6',color:'白',size:140,qty:1,unitPrice:3.5,amount:490},
+    {no:2,id:'d3b',product:'ㄇ 6*6*6',color:'白',size:160,qty:3,unitPrice:3.5,amount:1680},
+    {no:3,id:'d3c',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:4,id:'d3d',product:'ㄇ 6*6*6',color:'白',size:190,qty:1,unitPrice:3.5,amount:665},
+    {no:5,id:'d3e',product:'ㄇ 6*6*6',color:'牙',size:140,qty:1,unitPrice:3.5,amount:490},
+    {no:6,id:'d3f',product:'ㄇ 6*6*6',color:'牙',size:150,qty:3,unitPrice:3.5,amount:1575},
+    {no:7,id:'d3g',product:'ㄇ 6*6*6',color:'牙',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:8,id:'d3h',product:'ㄇ 6*6*6',color:'牙',size:180,qty:1,unitPrice:3.5,amount:630},
+    {no:9,id:'d3i',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.7,amount:1110},
+    {no:10,id:'d3j',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:11,id:'d3k',product:'h 6*6*7',color:'白',size:180,qty:1,unitPrice:3.7,amount:666},
+  ]},
+  {id:'d04',customerId:'c20',date:'2026-04-14',orderNumber:'1150414',extras:[],shipping:250,note:'',
+   total:858,items:[
+    {no:1,id:'d4a',product:'ㄇ 6*6*6',color:'黑',size:157,qty:1,unitPrice:3.8,amount:608},
+  ]},
+  {id:'d05',customerId:'c11',date:'2026-04-16',orderNumber:'1150416',extras:[],shipping:0,note:'',
+   total:3844,items:[
+    {no:1,id:'d5a',product:'ㄇ 6*6*6',color:'白',size:160,qty:3,unitPrice:3.0,amount:1440},
+    {no:2,id:'d5b',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.0,amount:900},
+    {no:3,id:'d5c',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.2,amount:1024},
+    {no:4,id:'d5d',product:'h 6*6*7',color:'白',size:150,qty:1,unitPrice:3.2,amount:480},
+  ]},
+  {id:'d06',customerId:'c21',date:'2026-04-16',orderNumber:'1150416',extras:[],shipping:0,note:'',
+   total:4970,items:[
+    {no:1,id:'d6a',product:'ㄇ 6*6*6',color:'白',size:160,qty:4,unitPrice:3.5,amount:2240},
+    {no:2,id:'d6b',product:'ㄇ 6*6*6',color:'白',size:65,qty:4,unitPrice:3.5,amount:910},
+    {no:3,id:'d6c',product:'ㄇ 6*6*6',color:'黑',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:4,id:'d6d',product:'ㄇ 6*6*6',color:'白',size:100,qty:2,unitPrice:3.5,amount:700},
+  ]},
+  {id:'d07',customerId:'c01',date:'2026-04-21',orderNumber:'1150421',extras:[],shipping:0,note:'',
+   total:588,items:[
+    {no:1,id:'d7a',product:'ㄇ 6*6*6',color:'黑',size:210,qty:1,unitPrice:2.8,amount:588},
+  ]},
+  {id:'d08',customerId:'c02',date:'2026-04-27',orderNumber:'1150427',extras:[],shipping:0,note:'',
+   total:2655,items:[
+    {no:1,id:'d8a',product:'ㄇ 6*6*6',color:'白',size:130,qty:6,unitPrice:3.0,amount:2340},
+    {no:2,id:'d8b',product:'ㄇ 6*6*6',color:'大理石灰',size:105,qty:1,unitPrice:3.0,amount:315},
+  ]},
+  {id:'d09',customerId:'c05',date:'2026-04-28',orderNumber:'1150428',extras:[],shipping:0,note:'',
+   total:3990,items:[
+    {no:1,id:'d9a',product:'ㄇ 6*6*6',color:'白',size:120,qty:2,unitPrice:3.5,amount:840},
+    {no:2,id:'d9b',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.5,amount:1050},
+    {no:3,id:'d9c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:4,id:'d9d',product:'ㄇ 6*6*6',color:'白',size:70,qty:4,unitPrice:3.5,amount:980},
+  ]},
+  {id:'d10',customerId:'c21',date:'2026-04-30',orderNumber:'1150430',extras:[],shipping:250,note:'',
+   total:805,items:[
+    {no:1,id:'d10a',product:'h 6*6*7',color:'黑',size:150,qty:1,unitPrice:3.7,amount:555},
+  ]},
+  {id:'d11',customerId:'c01',date:'2026-04-30',orderNumber:'1150430',extras:[],shipping:0,note:'',
+   total:2470,items:[
+    {no:1,id:'d11a',product:'h 6*6*7',color:'白',size:130,qty:3,unitPrice:3.0,amount:1170},
+    {no:2,id:'d11b',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.0,amount:900},
+    {no:3,id:'d11c',product:'運費',color:'',size:0,qty:1,unitPrice:200,amount:200},
+    {no:4,id:'d11d',product:'運費',color:'',size:0,qty:1,unitPrice:200,amount:200},
+  ]},
+  // ===== 202603 =====
+  {id:'c01x',customerId:'c06',date:'2026-03-01',orderNumber:'1150301',extras:[],shipping:0,note:'',
+   total:8204,items:[
+    {no:1,id:'c1a',product:'ㄇ 6*6*6',color:'牙',size:160,qty:4,unitPrice:3.7,amount:2368},
+    {no:2,id:'c1b',product:'ㄇ 6*6*6',color:'白',size:180,qty:4,unitPrice:3.7,amount:2664},
+    {no:3,id:'c1c',product:'ㄇ 6*6*6',color:'白',size:100,qty:2,unitPrice:3.7,amount:740},
+    {no:4,id:'c1d',product:'ㄇ 6*6*6',color:'黑',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:5,id:'c1e',product:'h 6*6*7',color:'牙',size:160,qty:2,unitPrice:3.9,amount:1248},
+  ]},
+  {id:'c02x',customerId:'c04',date:'2026-03-02',orderNumber:'1150302',extras:[],shipping:0,note:'',
+   total:5836,items:[
+    {no:1,id:'c2a',product:'ㄇ 6*6*6',color:'牙',size:90,qty:1,unitPrice:3.6,amount:324},
+    {no:2,id:'c2b',product:'ㄇ 6*6*6',color:'牙',size:150,qty:2,unitPrice:3.6,amount:1080},
+    {no:3,id:'c2c',product:'ㄇ 6*6*6',color:'白',size:150,qty:3,unitPrice:3.6,amount:1620},
+    {no:4,id:'c2d',product:'ㄇ 6*6*6',color:'白',size:140,qty:1,unitPrice:3.6,amount:504},
+    {no:5,id:'c2e',product:'ㄇ 6*6*6',color:'白',size:241,qty:1,unitPrice:3.6,amount:868},
+    {no:6,id:'c2f',product:'ㄇ 6*6*6',color:'黑',size:100,qty:1,unitPrice:3.6,amount:360},
+    {no:7,id:'c2g',product:'ㄇ 6*6*6',color:'黑',size:150,qty:2,unitPrice:3.6,amount:1080},
+  ]},
+  {id:'c03x',customerId:'c05',date:'2026-03-03',orderNumber:'1150303',extras:[],shipping:0,note:'',
+   total:3854,items:[
+    {no:1,id:'c3a',product:'ㄇ 6*6*6',color:'牙',size:170,qty:2,unitPrice:3.5,amount:1190},
+    {no:2,id:'c3b',product:'h 6*6*7',color:'牙',size:170,qty:2,unitPrice:3.7,amount:1258},
+    {no:3,id:'c3c',product:'h 6*6*7',color:'牙',size:180,qty:1,unitPrice:3.7,amount:666},
+    {no:4,id:'c3d',product:'h 6*6*7',color:'牙',size:200,qty:1,unitPrice:3.7,amount:740},
+  ]},
+  {id:'c04x',customerId:'c50',date:'2026-03-04',orderNumber:'1150304',extras:[],shipping:0,note:'',
+   total:2332,items:[
+    {no:1,id:'c4a',product:'ㄇ 6*6*6',color:'白',size:180,qty:1,unitPrice:3.5,amount:630},
+    {no:2,id:'c4b',product:'h 6*6*7',color:'白',size:140,qty:1,unitPrice:3.7,amount:518},
+    {no:3,id:'c4c',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.7,amount:1184},
+  ]},
+  {id:'c05x',customerId:'c04',date:'2026-03-05',orderNumber:'1150305',extras:[],shipping:0,note:'',
+   total:4080,items:[
+    {no:1,id:'c5a',product:'h 6*6*7',color:'白',size:130,qty:2,unitPrice:4.0,amount:1040},
+    {no:2,id:'c5b',product:'h 6*6*7',color:'白',size:140,qty:2,unitPrice:4.0,amount:1120},
+    {no:3,id:'c5c',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:4.0,amount:1200},
+    {no:4,id:'c5d',product:'h 6*6*7',color:'白',size:90,qty:2,unitPrice:4.0,amount:720},
+  ]},
+  {id:'c06x',customerId:'c04',date:'2026-03-06',orderNumber:'1150306',extras:[],shipping:200,note:'',
+   total:880,items:[
+    {no:1,id:'c6a',product:'h 6*6*7',color:'白',size:130,qty:1,unitPrice:4.0,amount:520},
+    {no:2,id:'c6b',product:'L角配件',color:'',size:0,qty:1,unitPrice:160,amount:160},
+  ]},
+  {id:'c07x',customerId:'c01',date:'2026-03-07',orderNumber:'1150307',extras:[],shipping:0,note:'',
+   total:532,items:[
+    {no:1,id:'c7a',product:'ㄇ 6*6*6',color:'牙',size:190,qty:1,unitPrice:2.8,amount:532},
+  ]},
+  {id:'c08x',customerId:'c03',date:'2026-03-08',orderNumber:'1150308',extras:[],shipping:0,note:'',
+   total:6962,items:[
+    {no:1,id:'c8a',product:'ㄇ 6*6*6',color:'白',size:150,qty:1,unitPrice:3.5,amount:525},
+    {no:2,id:'c8b',product:'ㄇ 6*6*6',color:'白',size:160,qty:1,unitPrice:3.5,amount:560},
+    {no:3,id:'c8c',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:3.5,amount:1190},
+    {no:4,id:'c8d',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:3.5,amount:1260},
+    {no:5,id:'c8e',product:'ㄇ 6*6*6',color:'牙',size:160,qty:4,unitPrice:3.5,amount:2240},
+    {no:6,id:'c8f',product:'ㄇ 6*6*6',color:'牙',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:7,id:'c8g',product:'h 6*6*7',color:'白',size:160,qty:1,unitPrice:3.7,amount:592},
+  ]},
+  {id:'c09x',customerId:'c01',date:'2026-03-09',orderNumber:'1150309',extras:[],shipping:0,note:'',
+   total:405,items:[
+    {no:1,id:'c9a',product:'h 6*6*7',color:'牙',size:135,qty:1,unitPrice:3.0,amount:405},
+  ]},
+  {id:'c10x',customerId:'c01',date:'2026-03-10',orderNumber:'1150310',extras:[],shipping:0,note:'',
+   total:11250,items:[
+    {no:1,id:'c10a',product:'ㄇ 6*6*6',color:'白',size:120,qty:4,unitPrice:2.8,amount:1344},
+    {no:2,id:'c10b',product:'ㄇ 6*6*6',color:'白',size:150,qty:4,unitPrice:2.8,amount:1680},
+    {no:3,id:'c10c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:2.8,amount:896},
+    {no:4,id:'c10d',product:'ㄇ 6*6*6',color:'白',size:200,qty:2,unitPrice:2.8,amount:1120},
+    {no:5,id:'c10e',product:'ㄇ 6*6*6',color:'黑',size:130,qty:2,unitPrice:2.8,amount:728},
+    {no:6,id:'c10f',product:'ㄇ 6*6*6',color:'黑',size:150,qty:2,unitPrice:2.8,amount:840},
+    {no:7,id:'c10g',product:'ㄇ 6*6*6',color:'黑',size:160,qty:4,unitPrice:2.8,amount:1792},
+    {no:8,id:'c10h',product:'h 6*6*7',color:'白',size:130,qty:2,unitPrice:3.0,amount:780},
+    {no:9,id:'c10i',product:'h 6*6*7',color:'白',size:190,qty:1,unitPrice:3.0,amount:570},
+    {no:10,id:'c10j',product:'h 6*6*7',color:'黑',size:160,qty:2,unitPrice:3.0,amount:960},
+    {no:11,id:'c10k',product:'h 6*6*7',color:'牙',size:180,qty:1,unitPrice:3.0,amount:540},
+  ]},
+  {id:'c11x',customerId:'c07',date:'2026-03-11',orderNumber:'1150311',extras:[],shipping:0,note:'',
+   total:8400,items:[
+    {no:1,id:'c11a',product:'ㄇ 6*6*6',color:'白',size:120,qty:20,unitPrice:3.5,amount:8400},
+  ]},
+  {id:'c12x',customerId:'c02',date:'2026-03-12',orderNumber:'1150312',extras:[],shipping:0,note:'',
+   total:23220,items:[
+    {no:1,id:'c12a',product:'ㄇ 6*6*6',color:'白',size:270,qty:6,unitPrice:3.0,amount:4860},
+    {no:2,id:'c12b',product:'ㄇ 6*6*6',color:'白',size:300,qty:6,unitPrice:3.0,amount:5400},
+    {no:3,id:'c12c',product:'ㄇ 6*6*6',color:'牙',size:150,qty:6,unitPrice:3.0,amount:2700},
+    {no:4,id:'c12d',product:'ㄇ 6*6*6',color:'牙',size:270,qty:6,unitPrice:3.0,amount:4860},
+    {no:5,id:'c12e',product:'ㄇ 6*6*6',color:'牙',size:300,qty:6,unitPrice:3.0,amount:5400},
+  ]},
+  {id:'c13x',customerId:'c10',date:'2026-03-13',orderNumber:'1150313',extras:[],shipping:0,note:'',
+   total:8190,items:[
+    {no:1,id:'c13a',product:'ㄇ 6*6*6',color:'白',size:120,qty:1,unitPrice:3.5,amount:420},
+    {no:2,id:'c13b',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.5,amount:1050},
+    {no:3,id:'c13c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:4,id:'c13d',product:'ㄇ 6*6*6',color:'白',size:180,qty:4,unitPrice:3.5,amount:2520},
+    {no:5,id:'c13e',product:'ㄇ 6*6*6',color:'白',size:240,qty:1,unitPrice:3.5,amount:840},
+    {no:6,id:'c13f',product:'ㄇ 6*6*6',color:'牙',size:120,qty:1,unitPrice:3.5,amount:420},
+    {no:7,id:'c13g',product:'ㄇ 6*6*6',color:'牙',size:150,qty:1,unitPrice:3.5,amount:525},
+    {no:8,id:'c13h',product:'ㄇ 6*6*6',color:'牙',size:160,qty:1,unitPrice:3.5,amount:560},
+    {no:9,id:'c13i',product:'ㄇ 6*6*6',color:'牙',size:210,qty:1,unitPrice:3.5,amount:735},
+  ]},
+  {id:'c16x',customerId:'c11',date:'2026-03-16',orderNumber:'1150316',extras:[],shipping:0,note:'',
+   total:3210,items:[
+    {no:1,id:'c16a',product:'ㄇ 6*6*6',color:'白',size:90,qty:1,unitPrice:3.0,amount:270},
+    {no:2,id:'c16b',product:'ㄇ 6*6*6',color:'白',size:100,qty:1,unitPrice:3.0,amount:300},
+    {no:3,id:'c16c',product:'ㄇ 6*6*6',color:'白',size:120,qty:2,unitPrice:3.0,amount:720},
+    {no:4,id:'c16d',product:'ㄇ 6*6*6',color:'白',size:160,qty:4,unitPrice:3.0,amount:1920},
+  ]},
+  {id:'c17x',customerId:'c08',date:'2026-03-26',orderNumber:'1150326',extras:[],shipping:0,note:'',
+   total:6749,items:[
+    {no:1,id:'c17a',product:'h 6*6*7',color:'白',size:100,qty:2,unitPrice:3.7,amount:740},
+    {no:2,id:'c17b',product:'h 6*6*7',color:'白',size:110,qty:2,unitPrice:3.7,amount:814},
+    {no:3,id:'c17c',product:'h 6*6*7',color:'白',size:120,qty:1,unitPrice:3.7,amount:444},
+    {no:4,id:'c17d',product:'h 6*6*7',color:'白',size:130,qty:1,unitPrice:3.7,amount:481},
+    {no:5,id:'c17e',product:'ㄇ 6*6*6',color:'白',size:110,qty:2,unitPrice:3.5,amount:770},
+    {no:6,id:'c17f',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:3.5,amount:1190},
+    {no:7,id:'c17g',product:'ㄇ 6*6*6',color:'牙',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:8,id:'c17h',product:'ㄇ 6*6*6',color:'牙',size:170,qty:2,unitPrice:3.5,amount:1190},
+  ]},
+  {id:'c18x',customerId:'c15',date:'2026-03-30',orderNumber:'1150330',extras:[],shipping:0,note:'',
+   total:1435,items:[
+    {no:1,id:'c18a',product:'ㄇ 6*6*6',color:'白',size:130,qty:2,unitPrice:3.5,amount:910},
+    {no:2,id:'c18b',product:'ㄇ 6*6*6',color:'白',size:150,qty:1,unitPrice:3.5,amount:525},
+  ]},
+  {id:'c19x',customerId:'c05',date:'2026-03-30',orderNumber:'1150330',extras:[],shipping:0,note:'',
+   total:9002,items:[
+    {no:1,id:'c19a',product:'ㄇ 6*6*6',color:'牙',size:150,qty:4,unitPrice:3.5,amount:2100},
+    {no:2,id:'c19b',product:'ㄇ 6*6*6',color:'牙',size:160,qty:4,unitPrice:3.5,amount:2240},
+    {no:3,id:'c19c',product:'h 6*6*7',color:'牙',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:4,id:'c19d',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.7,amount:1110},
+    {no:5,id:'c19e',product:'h 6*6*7',color:'白',size:160,qty:4,unitPrice:3.7,amount:2368},
+  ]},
+  {id:'c20x',customerId:'c04',date:'2026-03-30',orderNumber:'1150330',extras:[],shipping:0,note:'',
+   total:6794,items:[
+    {no:1,id:'c20a',product:'ㄇ 6*6*6',color:'白',size:100,qty:2,unitPrice:3.6,amount:720},
+    {no:2,id:'c20b',product:'ㄇ 6*6*6',color:'白',size:140,qty:1,unitPrice:3.6,amount:504},
+    {no:3,id:'c20c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.6,amount:1152},
+    {no:4,id:'c20d',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.6,amount:612},
+    {no:5,id:'c20e',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:3.6,amount:1296},
+    {no:6,id:'c20f',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:4.0,amount:1280},
+    {no:7,id:'c20g',product:'L角配件',color:'',size:0,qty:3,unitPrice:160,amount:480},
+    {no:8,id:'c20h',product:'人工費',color:'',size:0,qty:3,unitPrice:250,amount:750},
+  ]},
+  {id:'c21x',customerId:'c01',date:'2026-03-31',orderNumber:'1150331',extras:[],shipping:0,note:'',
+   total:10696,items:[
+    {no:1,id:'c21a',product:'ㄇ 6*6*6',color:'白',size:120,qty:2,unitPrice:2.8,amount:672},
+    {no:2,id:'c21b',product:'ㄇ 6*6*6',color:'白',size:130,qty:2,unitPrice:2.8,amount:728},
+    {no:3,id:'c21c',product:'ㄇ 6*6*6',color:'白',size:140,qty:4,unitPrice:2.8,amount:1568},
+    {no:4,id:'c21d',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:2.8,amount:952},
+    {no:5,id:'c21e',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:2.8,amount:1008},
+    {no:6,id:'c21f',product:'ㄇ 6*6*6',color:'牙',size:120,qty:4,unitPrice:2.8,amount:1344},
+    {no:7,id:'c21g',product:'ㄇ 6*6*6',color:'牙',size:140,qty:2,unitPrice:2.8,amount:784},
+    {no:8,id:'c21h',product:'ㄇ 6*6*6',color:'牙',size:160,qty:6,unitPrice:2.8,amount:2688},
+    {no:9,id:'c21i',product:'ㄇ 6*6*6',color:'牙',size:170,qty:2,unitPrice:2.8,amount:952},
+  ]},
+  // ===== 202602 =====
+  {id:'b01',customerId:'c45',date:'2026-02-01',orderNumber:'1150201',extras:[],shipping:0,note:'',
+   total:12635,items:[
+    {no:1,id:'b1a',product:'ㄇ 6*6*6',color:'黑',size:190,qty:19,unitPrice:3.5,amount:12635},
+  ]},
+  {id:'b02',customerId:'c03',date:'2026-02-02',orderNumber:'1150202',extras:[],shipping:0,note:'',
+   total:6948,items:[
+    {no:1,id:'b2a',product:'ㄇ 6*6*6',color:'白',size:150,qty:1,unitPrice:3.5,amount:525},
+    {no:2,id:'b2b',product:'ㄇ 6*6*6',color:'白',size:160,qty:1,unitPrice:3.5,amount:560},
+    {no:3,id:'b2c',product:'ㄇ 6*6*6',color:'牙',size:140,qty:1,unitPrice:3.5,amount:490},
+    {no:4,id:'b2d',product:'ㄇ 6*6*6',color:'牙',size:160,qty:1,unitPrice:3.5,amount:560},
+    {no:5,id:'b2e',product:'ㄇ 6*6*6',color:'牙',size:170,qty:1,unitPrice:3.5,amount:595},
+    {no:6,id:'b2f',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.7,amount:1110},
+    {no:7,id:'b2g',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:8,id:'b2h',product:'h 6*6*7',color:'白',size:170,qty:2,unitPrice:3.7,amount:1258},
+    {no:9,id:'b2i',product:'h 6*6*7',color:'白',size:180,qty:1,unitPrice:3.7,amount:666},
+  ]},
+  {id:'b03',customerId:'c04',date:'2026-02-03',orderNumber:'1150203',extras:[],shipping:0,note:'',
+   total:4880,items:[
+    {no:1,id:'b3a',product:'h 6*6*7',color:'黑',size:100,qty:2,unitPrice:4.0,amount:800},
+    {no:2,id:'b3b',product:'h 6*6*7',color:'黑',size:150,qty:2,unitPrice:4.0,amount:1200},
+    {no:3,id:'b3c',product:'ㄇ 6*6*6',color:'白',size:130,qty:1,unitPrice:3.6,amount:468},
+    {no:4,id:'b3d',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.6,amount:1152},
+    {no:5,id:'b3e',product:'ㄇ 6*6*6',color:'白',size:170,qty:1,unitPrice:3.6,amount:612},
+    {no:6,id:'b3f',product:'ㄇ 6*6*6',color:'白',size:180,qty:1,unitPrice:3.6,amount:648},
+  ]},
+  {id:'b04',customerId:'c21',date:'2026-02-04',orderNumber:'1150204',extras:[],shipping:0,note:'',
+   total:4830,items:[
+    {no:1,id:'b4a',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.5,amount:1050},
+    {no:2,id:'b4b',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:3,id:'b4c',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:3.5,amount:1260},
+    {no:4,id:'b4d',product:'ㄇ 6*6*6',color:'白',size:200,qty:2,unitPrice:3.5,amount:1400},
+  ]},
+  {id:'b05',customerId:'c09',date:'2026-02-05',orderNumber:'1150205',extras:[],shipping:0,note:'',
+   total:13690,items:[
+    {no:1,id:'b5a',product:'ㄇ 6*6*6',color:'白',size:150,qty:5,unitPrice:3.5,amount:2625},
+    {no:2,id:'b5b',product:'ㄇ 6*6*6',color:'白',size:160,qty:5,unitPrice:3.5,amount:2800},
+    {no:3,id:'b5c',product:'ㄇ 6*6*6',color:'白',size:170,qty:3,unitPrice:3.5,amount:1785},
+    {no:4,id:'b5d',product:'ㄇ 6*6*6',color:'白',size:180,qty:5,unitPrice:3.5,amount:3150},
+    {no:5,id:'b5e',product:'h 6*6*7',color:'白',size:170,qty:2,unitPrice:3.7,amount:1258},
+    {no:6,id:'b5f',product:'h 6*6*7',color:'白',size:180,qty:2,unitPrice:3.7,amount:1332},
+    {no:7,id:'b5g',product:'h 6*6*7',color:'白',size:200,qty:1,unitPrice:3.7,amount:740},
+  ]},
+  {id:'b06',customerId:'c02',date:'2026-02-06',orderNumber:'1150206',extras:[],shipping:0,note:'',
+   total:2880,items:[
+    {no:1,id:'b6a',product:'ㄇ 6*6*6',color:'黑',size:160,qty:6,unitPrice:3.0,amount:2880},
+  ]},
+  // ===== 202601 =====
+  {id:'a01',customerId:'c06',date:'2026-01-01',orderNumber:'1150101',extras:[],shipping:0,note:'',
+   total:13790,items:[
+    {no:1,id:'a1a',product:'ㄇ 6*6*6',color:'白',size:90,qty:2,unitPrice:3.5,amount:630},
+    {no:2,id:'a1b',product:'ㄇ 6*6*6',color:'白',size:100,qty:2,unitPrice:3.5,amount:700},
+    {no:3,id:'a1c',product:'ㄇ 6*6*6',color:'白',size:140,qty:2,unitPrice:3.5,amount:980},
+    {no:4,id:'a1d',product:'ㄇ 6*6*6',color:'白',size:150,qty:6,unitPrice:3.5,amount:3150},
+    {no:5,id:'a1e',product:'ㄇ 6*6*6',color:'白',size:181,qty:1,unitPrice:3.5,amount:665},
+    {no:6,id:'a1f',product:'ㄇ 6*6*6',color:'白',size:183,qty:1,unitPrice:3.5,amount:665},
+    {no:7,id:'a1g',product:'ㄇ 6*6*6',color:'白',size:197,qty:1,unitPrice:3.5,amount:700},
+    {no:8,id:'a1h',product:'ㄇ 6*6*6',color:'白',size:200,qty:9,unitPrice:3.5,amount:6300},
+  ]},
+  {id:'a02',customerId:'c11',date:'2026-01-02',orderNumber:'1150102',extras:[],shipping:0,note:'',
+   total:3510,items:[
+    {no:1,id:'a2a',product:'ㄇ 6*6*6',color:'白',size:70,qty:6,unitPrice:2.7,amount:1134},
+    {no:2,id:'a2b',product:'ㄇ 6*6*6',color:'白',size:140,qty:4,unitPrice:2.7,amount:1512},
+    {no:3,id:'a2c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:2.7,amount:864},
+  ]},
+  {id:'a03',customerId:'c03',date:'2026-01-03',orderNumber:'1150103',extras:[],shipping:0,note:'',
+   total:6720,items:[
+    {no:1,id:'a3a',product:'ㄇ 6*6*6',color:'白',size:140,qty:1,unitPrice:3.5,amount:490},
+    {no:2,id:'a3b',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:3.5,amount:1050},
+    {no:3,id:'a3c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.5,amount:1120},
+    {no:4,id:'a3d',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:3.5,amount:1190},
+    {no:5,id:'a3e',product:'ㄇ 6*6*6',color:'白',size:180,qty:1,unitPrice:3.5,amount:630},
+    {no:6,id:'a3f',product:'ㄇ 6*6*6',color:'白',size:190,qty:1,unitPrice:3.5,amount:665},
+    {no:7,id:'a3g',product:'ㄇ 6*6*6',color:'牙',size:140,qty:1,unitPrice:3.5,amount:490},
+    {no:8,id:'a3h',product:'ㄇ 6*6*6',color:'牙',size:150,qty:1,unitPrice:3.5,amount:525},
+    {no:9,id:'a3i',product:'ㄇ 6*6*6',color:'牙',size:160,qty:1,unitPrice:3.5,amount:560},
+  ]},
+  {id:'a04',customerId:'c01',date:'2026-01-04',orderNumber:'1150104',extras:[],shipping:0,note:'',
+   total:952,items:[
+    {no:1,id:'a4a',product:'ㄇ 6*6*6',color:'白',size:160,qty:1,unitPrice:2.8,amount:448},
+    {no:2,id:'a4b',product:'ㄇ 6*6*6',color:'白',size:180,qty:1,unitPrice:2.8,amount:504},
+  ]},
+  {id:'a05',customerId:'c07',date:'2026-01-05',orderNumber:'1150105',extras:[],shipping:0,note:'',
+   total:19320,items:[
+    {no:1,id:'a5a',product:'ㄇ 6*6*6',color:'白',size:120,qty:10,unitPrice:3.5,amount:4200},
+    {no:2,id:'a5b',product:'ㄇ 6*6*6',color:'白',size:130,qty:10,unitPrice:3.5,amount:4550},
+    {no:3,id:'a5c',product:'ㄇ 6*6*6',color:'白',size:160,qty:10,unitPrice:3.5,amount:5600},
+    {no:4,id:'a5d',product:'ㄇ 6*6*6',color:'白',size:150,qty:5,unitPrice:3.5,amount:2625},
+    {no:5,id:'a5e',product:'ㄇ 6*6*6',color:'黑',size:130,qty:3,unitPrice:3.5,amount:1365},
+    {no:6,id:'a5f',product:'ㄇ 6*6*6',color:'黑',size:140,qty:2,unitPrice:3.5,amount:980},
+  ]},
+  {id:'a06',customerId:'c06',date:'2026-01-06',orderNumber:'1150106',extras:[],shipping:0,note:'',
+   total:12358,items:[
+    {no:1,id:'a6a',product:'ㄇ 6*6*6',color:'白',size:160,qty:6,unitPrice:3.7,amount:3552},
+    {no:2,id:'a6b',product:'ㄇ 6*6*6',color:'白',size:170,qty:4,unitPrice:3.7,amount:2516},
+    {no:3,id:'a6c',product:'ㄇ 6*6*6',color:'白',size:190,qty:2,unitPrice:3.7,amount:1406},
+    {no:4,id:'a6d',product:'ㄇ 6*6*6',color:'白',size:200,qty:2,unitPrice:3.7,amount:1480},
+    {no:5,id:'a6e',product:'ㄇ 6*6*6',color:'牙',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:6,id:'a6f',product:'ㄇ 6*6*6',color:'黑',size:150,qty:4,unitPrice:3.7,amount:2220},
+  ]},
+  {id:'a07',customerId:'c05',date:'2026-01-07',orderNumber:'1150107',extras:[],shipping:0,note:'',
+   total:3220,items:[
+    {no:1,id:'a7a',product:'ㄇ 6*6*6',color:'白',size:120,qty:5,unitPrice:3.5,amount:2100},
+    {no:2,id:'a7b',product:'ㄇ 6*6*6',color:'牙',size:160,qty:2,unitPrice:3.5,amount:1120},
+  ]},
+  {id:'a08',customerId:'c02',date:'2026-01-08',orderNumber:'1150108',extras:[],shipping:0,note:'',
+   total:18360,items:[
+    {no:1,id:'a8a',product:'ㄇ 6*6*6',color:'白',size:160,qty:6,unitPrice:3.0,amount:2880},
+    {no:2,id:'a8b',product:'ㄇ 6*6*6',color:'白',size:270,qty:3,unitPrice:3.0,amount:2430},
+    {no:3,id:'a8c',product:'ㄇ 6*6*6',color:'白',size:300,qty:3,unitPrice:3.0,amount:2700},
+    {no:4,id:'a8d',product:'ㄇ 6*6*6',color:'牙',size:140,qty:6,unitPrice:3.0,amount:2520},
+    {no:5,id:'a8e',product:'ㄇ 6*6*6',color:'牙',size:150,qty:6,unitPrice:3.0,amount:2700},
+    {no:6,id:'a8f',product:'ㄇ 6*6*6',color:'牙',size:270,qty:3,unitPrice:3.0,amount:2430},
+    {no:7,id:'a8g',product:'ㄇ 6*6*6',color:'牙',size:300,qty:3,unitPrice:3.0,amount:2700},
+  ]},
+  {id:'a09',customerId:'c01',date:'2026-01-09',orderNumber:'1150109',extras:[],shipping:0,note:'',
+   total:8932,items:[
+    {no:1,id:'a9a',product:'ㄇ 6*6*6',color:'牙',size:140,qty:4,unitPrice:2.8,amount:1568},
+    {no:2,id:'a9b',product:'ㄇ 6*6*6',color:'牙',size:160,qty:2,unitPrice:2.8,amount:896},
+    {no:3,id:'a9c',product:'ㄇ 6*6*6',color:'牙',size:200,qty:2,unitPrice:2.8,amount:1120},
+    {no:4,id:'a9d',product:'ㄇ 6*6*6',color:'白',size:150,qty:2,unitPrice:2.8,amount:840},
+    {no:5,id:'a9e',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:2.8,amount:896},
+    {no:6,id:'a9f',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:2.8,amount:952},
+    {no:7,id:'a9g',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:2.8,amount:1008},
+    {no:8,id:'a9h',product:'ㄇ 6*6*6',color:'白',size:190,qty:2,unitPrice:2.8,amount:1064},
+    {no:9,id:'a9i',product:'ㄇ 6*6*6',color:'白',size:210,qty:1,unitPrice:2.8,amount:588},
+  ]},
+  {id:'a10',customerId:'c04',date:'2026-01-10',orderNumber:'1150110',extras:[],shipping:0,note:'',
+   total:4924,items:[
+    {no:1,id:'a10a',product:'ㄇ 6*6*6',color:'白',size:130,qty:1,unitPrice:3.6,amount:468},
+    {no:2,id:'a10b',product:'ㄇ 6*6*6',color:'白',size:150,qty:3,unitPrice:3.6,amount:1620},
+    {no:3,id:'a10c',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.6,amount:1152},
+    {no:4,id:'a10d',product:'h 6*6*7',color:'白',size:160,qty:1,unitPrice:4.0,amount:640},
+    {no:5,id:'a10e',product:'h 6*6*7',color:'白',size:180,qty:1,unitPrice:4.0,amount:720},
+    {no:6,id:'a10f',product:'ㄇ 6*6*6',color:'黑',size:90,qty:1,unitPrice:3.6,amount:324},
+  ]},
+  {id:'a11',customerId:'c02',date:'2026-01-11',orderNumber:'1150111',extras:[],shipping:0,note:'',
+   total:2880,items:[
+    {no:1,id:'a11a',product:'ㄇ 6*6*6',color:'黑',size:160,qty:6,unitPrice:3.0,amount:2880},
+  ]},
+  {id:'a12',customerId:'c05',date:'2026-01-12',orderNumber:'1150112',extras:[],shipping:0,note:'',
+   total:6778,items:[
+    {no:1,id:'a12a',product:'h 6*6*7',color:'牙',size:115,qty:1,unitPrice:3.7,amount:426},
+    {no:2,id:'a12b',product:'h 6*6*7',color:'牙',size:155,qty:1,unitPrice:3.7,amount:574},
+    {no:3,id:'a12c',product:'h 6*6*7',color:'牙',size:150,qty:2,unitPrice:3.7,amount:1110},
+    {no:4,id:'a12d',product:'h 6*6*7',color:'牙',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:5,id:'a12e',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.7,amount:1110},
+    {no:6,id:'a12f',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.7,amount:1184},
+    {no:7,id:'a12g',product:'ㄇ 6*6*6',color:'白',size:170,qty:2,unitPrice:3.5,amount:1190},
+  ]},
+  {id:'a13',customerId:'c11',date:'2026-01-13',orderNumber:'1150113',extras:[],shipping:0,note:'',
+   total:3904,items:[
+    {no:1,id:'a13a',product:'ㄇ 6*6*6',color:'白',size:160,qty:4,unitPrice:3.0,amount:1920},
+    {no:2,id:'a13b',product:'h 6*6*7',color:'白',size:160,qty:2,unitPrice:3.2,amount:1024},
+    {no:3,id:'a13c',product:'h 6*6*7',color:'白',size:150,qty:2,unitPrice:3.2,amount:960},
+  ]},
+  {id:'a14',customerId:'c16',date:'2026-01-14',orderNumber:'1150114',extras:[],shipping:0,note:'',
+   total:683,items:[
+    {no:1,id:'a14a',product:'ㄇ 6*6*6',color:'牙',size:65,qty:3,unitPrice:3.5,amount:683},
+  ]},
+  {id:'a15',customerId:'c01',date:'2026-01-15',orderNumber:'1150115',extras:[],shipping:0,note:'',
+   total:728,items:[
+    {no:1,id:'a15a',product:'ㄇ 6*6*6',color:'牙',size:260,qty:1,unitPrice:2.8,amount:728},
+  ]},
+  {id:'a16',customerId:'c11',date:'2026-01-16',orderNumber:'1150116',extras:[],shipping:0,note:'',
+   total:8310,items:[
+    {no:1,id:'a16a',product:'ㄇ 6*6*6',color:'白',size:170,qty:3,unitPrice:3.0,amount:1530},
+    {no:2,id:'a16b',product:'ㄇ 6*6*6',color:'白',size:120,qty:3,unitPrice:3.0,amount:1080},
+    {no:3,id:'a16c',product:'ㄇ 6*6*6',color:'白',size:150,qty:4,unitPrice:3.0,amount:1800},
+    {no:4,id:'a16d',product:'ㄇ 6*6*6',color:'白',size:140,qty:2,unitPrice:3.0,amount:840},
+    {no:5,id:'a16e',product:'ㄇ 6*6*6',color:'白',size:180,qty:2,unitPrice:3.0,amount:1080},
+    {no:6,id:'a16f',product:'ㄇ 6*6*6',color:'白',size:160,qty:2,unitPrice:3.0,amount:960},
+    {no:7,id:'a16g',product:'ㄇ 6*6*6',color:'白',size:190,qty:1,unitPrice:3.0,amount:570},
+    {no:8,id:'a16h',product:'ㄇ 6*6*6',color:'黑',size:150,qty:1,unitPrice:3.0,amount:450},
+  ]},
+];
+
+/* ===== UTILS ===== */
+const toROC=iso=>{if(!iso)return'';const d=new Date(iso+'T00:00:00');return`${d.getFullYear()-1911}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
+const toROCM=iso=>{if(!iso)return'';const d=new Date(iso+'T00:00:00');return`${d.getFullYear()-1911}-${String(d.getMonth()+1).padStart(2,'0')}`;};
+const getON=iso=>toROC(iso).replace(/-/g,'');
+const today=()=>new Date().toISOString().slice(0,10);
+const getUP=(prices,name,prod)=>{const cat=PCAT[prod];return((prices[name]||STD)[cat])||STD[cat]||0;};
+const calcAmt=(s,p,q)=>Math.round(s*p*q);
+const fmtN=n=>Number(n).toLocaleString();
+const uid=()=>Math.random().toString(36).slice(2,8);
+
+/* ===== SUPABASE DATABASE ===== */
+const SUPA_URL='https://akzdbdcutvolydlhjoug.supabase.co';
+const SUPA_KEY='sb_publishable_aGTsFRXyJgTHiSkQFVqzNA_JsG1h7LP';
+const supa=supabase.createClient(SUPA_URL,SUPA_KEY);
+const DB={
+  load:async(k,d)=>{try{const{data}=await supa.from('store').select('value').eq('key',k).maybeSingle();return data?data.value:d;}catch{return d;}},
+  save:(k,v)=>{supa.from('store').upsert({key:k,value:v,updated_at:new Date().toISOString()}).then(()=>{}).catch(()=>{});}
+};
+
+/* ===== PRINT HTML GENERATOR ===== */
+function genPrintHTML(order,cust,showPrices){
+  const roc=toROC(order.date);const rocM=toROCM(order.date);
+  const title=showPrices?'請款單':'銷貨單';
+  const items=order.items||[];
+  const MIN_ROWS=11;
+  let rows='';
+  if(showPrices){
+    items.forEach((item,i)=>{
+      const itemDate=item.orderDate?toROC(item.orderDate).replace(/-/g,''):roc.replace(/-/g,'');
+      rows+=`<tr><td>${i+1}</td><td>${itemDate}</td><td style="text-align:left;padding-left:4px">${item.product} ${item.color}</td><td>${item.size}</td><td>${item.qty}</td><td>${item.unitPrice}</td><td>${fmtN(item.amount)}</td><td></td></tr>`;
+    });
+    if(order.shipping>0)rows+=`<tr><td>${items.length+1}</td><td></td><td style="text-align:left;padding-left:4px">運費</td><td></td><td>1</td><td></td><td>${fmtN(order.shipping)}</td><td></td></tr>`;
+    const used=items.length+(order.shipping>0?1:0);
+    for(let i=used;i<MIN_ROWS;i++)rows+=`<tr style="height:18px"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  }else{
+    items.forEach((item,i)=>{
+      rows+=`<tr><td>${i+1}</td><td style="text-align:left;padding-left:4px">${item.product} ${item.color}</td><td>${item.size}</td><td>${item.qty}</td><td></td><td></td><td></td></tr>`;
+    });
+    for(let i=items.length;i<MIN_ROWS;i++)rows+=`<tr style="height:18px"><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>`;
+  }
+  const total=order.total||0;
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${title}</title>
+<style>
+@page{size:25.7cm 36.4cm;margin:0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","PingFang TC",sans-serif;font-size:9.5pt;color:#000;width:25.7cm;height:36.4cm}
+.outer{border:2px solid #000;padding:10px 12px;width:25.7cm;height:36.4cm;overflow:hidden}
+.hdr{text-align:center;margin-bottom:6px}
+.hdr h1{font-size:20pt;font-weight:700;letter-spacing:3px}
+.hdr h2{font-size:11pt;letter-spacing:1px}
+.ttl{text-align:center;font-size:16pt;font-weight:700;padding:4px;margin:10px 0 6px 0}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:6px;font-size:9.5pt}
+.ir{display:flex;align-items:baseline;margin-bottom:3px}
+.ib{font-weight:700;white-space:nowrap;min-width:72px}
+table{width:100%;border-collapse:collapse;font-size:9pt}
+th,td{border:1px solid #000;padding:3px 5px;text-align:center;vertical-align:middle;color:#000;background:#fff}
+th{font-weight:700;font-size:9pt}
+.tr td{font-weight:700;font-size:9.5pt}
+.sign{writing-mode:vertical-rl;text-orientation:mixed;text-align:center;vertical-align:middle;font-size:9.5pt;padding:3px 2px;white-space:nowrap}
+.footer{margin-top:8px;font-size:10pt;color:#000}
+</style></head><body>
+<div class="outer">
+<div class="hdr"><h1>${COMPANY.name}</h1><h2>${COMPANY.nameEn}</h2></div>
+<div class="ttl">${title}</div>
+<div class="info">
+<div>
+<div class="ir"><span class="ib">客戶名稱：</span><span>${cust.name}</span></div>
+<div class="ir"><span class="ib">聯絡人：</span><span>${cust.contact}</span></div>
+<div class="ir"><span class="ib">送貨地址：</span><span style="font-size:8.5pt">${cust.address}</span></div>
+</div>
+<div>
+<div class="ir"><span class="ib">聯絡電話：</span><span>${cust.phone}</span></div>
+${showPrices
+  ?`<div class="ir"><span class="ib">對帳月份：</span><span>${rocM}</span></div>`
+  :`<div class="ir"><span class="ib">銷貨單號：</span><span>${order.orderNumber}</span></div>`}
+<div class="ir"><span class="ib">日期：</span><span>${showPrices?rocM:roc}</span></div>
+</div>
+</div>
+<table>
+<thead><tr>
+<th style="width:4%">No.</th>
+${showPrices?'<th style="width:9%">訂購日期</th>':''}
+<th style="${showPrices?'width:29%':'width:38%'};text-align:left;padding-left:6px">產名規格</th>
+<th style="width:10%">尺寸(CM)</th>
+<th style="width:10%">數量</th>
+<th style="width:10%">單價</th>
+<th style="width:12%">金額</th>
+<th style="width:14%">備註</th>
+</tr></thead>
+<tbody>
+${rows}
+${showPrices
+  ?`<tr class="tr">
+      <td class="sign" rowspan="3" style="height:80px">客戶簽章</td>
+      <td colspan="3" rowspan="3" style="background:#fff"></td>
+      <td colspan="2" style="text-align:center">合計</td>
+      <td colspan="2">${fmtN(total)}</td>
+    </tr>
+    <tr class="tr">
+      <td colspan="2" style="text-align:center">稅額</td>
+      <td colspan="2"></td>
+    </tr>
+    <tr class="tr">
+      <td colspan="2" style="text-align:center">總計</td>
+      <td colspan="2"></td>
+    </tr>`
+  :`<tr class="tr">
+      <td class="sign" rowspan="3" style="height:80px">客戶簽章</td>
+      <td colspan="2" rowspan="3" style="background:#fff"></td>
+      <td colspan="2" style="text-align:center">合計</td>
+      <td colspan="2"></td>
+    </tr>
+    <tr class="tr">
+      <td colspan="2" style="text-align:center">稅額</td>
+      <td colspan="2"></td>
+    </tr>
+    <tr class="tr">
+      <td colspan="2" style="text-align:center">總計</td>
+      <td colspan="2"></td>
+    </tr>`
+}
+</tbody>
+</table>
+<div class="footer">
+<div style="margin-bottom:5px">公司地址：${COMPANY.addr}</div>
+<div>電話：${COMPANY.tel}　　Line ID：${COMPANY.line}</div>
+</div>
+</div>
+</body></html>`;
+}
+
+function exportXLSX(order,cust,showPrices){
+  try{
+    if(typeof XLSX==='undefined'){alert('XLSX 套件未載入，請確認網路連線後重新整理頁面');return;}
+    const wb=XLSX.utils.book_new();
+    const c=cust||{};
+    const roc=toROC(order.date);const rocM=toROCM(order.date);
+    const title=showPrices?'請款單':'銷貨單';
+    const items=order.items||[];
+    const total=order.total||0;
+    const tax=Math.round(total*0.05);
+
+    // 7 columns A-G matching 銷貨單 layout
+    // idx: 0=No. 1=產名規格 2=尺寸 3=數量 4=單價 5=金額 6=備註
+    const d=[
+      [null,null,null,null,null,null,null],                                     // 0 blank
+      [COMPANY.name,null,null,null,null,null,null],                             // 1 company name (A:G merged)
+      [COMPANY.nameEn,null,null,null,null,null,null],                           // 2 company EN
+      [title,null,null,null,null,null,null],                                    // 3 title
+      ['客戶名稱：',c.name||'',null,null,'聯絡電話：',c.phone||'',null],        // 4 info row 1
+      ['聯絡人：',c.contact||'',null,null,showPrices?'對帳月份：':'銷貨單號：',showPrices?rocM:order.orderNumber,null], // 5
+      ['送貨地址：',c.address||'',null,null,'日期：',showPrices?rocM:roc,null], // 6
+      ['No.','產名規格','尺寸(CM)','數量','單價','金額','備註'],                 // 7 header
+    ];
+
+    // 11 item rows (idx 8-18)
+    const MIN_ROWS=11;
+    for(let i=0;i<MIN_ROWS;i++){
+      const it=items[i];
+      if(it){
+        d.push([i+1,`${it.product||''} ${it.color||''}`.trim(),
+          it.size||null,it.qty||null,
+          showPrices?(it.unitPrice||null):null,
+          showPrices?(it.amount||null):null,
+          null]);
+      }else{
+        d.push([null,null,null,null,null,null,null]);
+      }
+    }
+
+    // Footer rows (idx 19-21)
+    d.push(['客戶簽章',null,null,'合計',null,showPrices?total:null,null]);       // 19
+    d.push([null,null,null,'稅額',null,showPrices?tax:null,null]);               // 20
+    d.push([null,null,null,'總計',null,showPrices?(total+tax):null,null]);       // 21
+    // Company footer (idx 22-23)
+    d.push([`公司地址：${COMPANY.addr}`,null,null,null,null,null,null]);         // 22
+    d.push([`電話：${COMPANY.tel}　　Line ID：${COMPANY.line}`,null,null,null,null,null,null]); // 23
+
+    const ws=XLSX.utils.aoa_to_sheet(d);
+
+    const merges=[
+      // Company / EN / title span all 7 cols
+      {s:{r:1,c:0},e:{r:1,c:6}},
+      {s:{r:2,c:0},e:{r:2,c:6}},
+      {s:{r:3,c:0},e:{r:3,c:6}},
+      // Info rows: value B-D merged, value F-G merged
+      {s:{r:4,c:1},e:{r:4,c:3}},{s:{r:4,c:5},e:{r:4,c:6}},
+      {s:{r:5,c:1},e:{r:5,c:3}},{s:{r:5,c:5},e:{r:5,c:6}},
+      {s:{r:6,c:1},e:{r:6,c:3}},{s:{r:6,c:5},e:{r:6,c:6}},
+      // Footer 客戶簽章 A-C rows 19-21
+      {s:{r:19,c:0},e:{r:21,c:2}},
+      // Footer labels D-E, values F-G
+      {s:{r:19,c:3},e:{r:19,c:4}},{s:{r:19,c:5},e:{r:19,c:6}},
+      {s:{r:20,c:3},e:{r:20,c:4}},{s:{r:20,c:5},e:{r:20,c:6}},
+      {s:{r:21,c:3},e:{r:21,c:4}},{s:{r:21,c:5},e:{r:21,c:6}},
+      // Company footer span all cols
+      {s:{r:22,c:0},e:{r:22,c:6}},
+      {s:{r:23,c:0},e:{r:23,c:6}},
+    ];
+    ws['!merges']=merges;
+
+    ws['!cols']=[{wch:5},{wch:26},{wch:10},{wch:8},{wch:8},{wch:11},{wch:14}];
+
+    XLSX.utils.book_append_sheet(wb,ws,title);
+
+    const wout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    const blob=new Blob([wout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`${order.orderNumber}_${c.name||'客戶'}_${title}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+  }catch(e){
+    alert('Excel 匯出失敗：'+e.message);
+    console.error('exportXLSX error:',e);
+  }
+}
+
+function exportHTML(order,cust,showPrices){
+  const html=genPrintHTML(order,cust,showPrices);
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`${order.orderNumber}_${cust.name}_${showPrices?'請款單':'銷貨單'}.html`;
+  a.click();URL.revokeObjectURL(url);
+}
+
+function printDoc(order,cust,showPrices){
+  const html=genPrintHTML(order,cust,showPrices);
+  const w=window.open('','_blank','width=820,height=580');
+  if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),700);}
+}
+
+/* ===== NEW ORDER MODAL ===== */
+function NewOrderModal({customers,prices,products,onSave,onClose}){
+  const[cid,setCid]=useState(customers[0]?.id||'');
+  const[date,setDate]=useState(today());
+  const[items,setItems]=useState([]);
+  const[shipping,setShipping]=useState(0);
+  const[note,setNote]=useState('');
+  const cust=customers.find(c=>c.id===cid)||customers[0];
+  const defProd=products[0]?.name||'ㄇ 6*6*6';
+
+  const getPrice=(custName,productName)=>{
+    const cat=PCAT[productName];
+    if(!cat)return 0;
+    return(prices[custName]||STD)[cat]||0;
+  };
+
+  const calcAmt=(item)=>{
+    if(['運費','L角配件','人工費'].includes(item.product))return item.amount;
+    return Math.round(item.size*item.qty*item.unitPrice);
+  };
+
+  useEffect(()=>{
+    if(cust){
+      const up=getPrice(cust.name,defProd);
+      const amt=Math.round(160*1*up);
+      setItems([{id:uid(),product:defProd,color:'白',size:160,qty:1,unitPrice:up,amount:amt}]);
+    }
+  },[]);
+
+  const updItem=(idx,field,val)=>{
+    setItems(prev=>{
+      const arr=[...prev];
+      const updated={...arr[idx],[field]:['size','qty','amount','unitPrice'].includes(field)?Number(val)||0:val};
+      if(field==='product')updated.unitPrice=getPrice(cust.name,val);
+      if(field!=='amount')updated.amount=calcAmt(updated);
+      arr[idx]=updated;
+      return arr;
+    });
+  };
+
+  const addItem=()=>{
+    const up=getPrice(cust.name,defProd);
+    const amt=Math.round(160*1*up);
+    setItems(prev=>[...prev,{id:uid(),product:defProd,color:'白',size:160,qty:1,unitPrice:up,amount:amt}]);
+  };
+
+  const delItem=idx=>setItems(prev=>prev.filter((_,i)=>i!==idx));
+
+  const handleCust=v=>{
+    setCid(v);
+    const newCust=customers.find(c=>c.id===v);
+    if(newCust)setItems(prev=>prev.map(item=>{
+      const up=getPrice(newCust.name,item.product);
+      const updated={...item,unitPrice:up};
+      return{...updated,amount:calcAmt(updated)};
+    }));
+  };
+
+  const subtotal=items.reduce((s,i)=>s+i.amount,0);
+  const total=subtotal+Number(shipping||0);
+
+  const handleSave=()=>{
+    if(!cid||!date)return alert('請選擇客戶和日期');
+    if(items.length===0)return alert('請新增至少一個商品');
+    const order={id:uid(),customerId:cid,date,orderNumber:getON(date),
+      items:items.map((it,i)=>({...it,no:i+1})),
+      extras:[],shipping:Number(shipping)||0,total,note};
+    onSave(order);
+    onClose();
+  };
+
+  return(
+    <div className="modal-bg">
+      <div className="modal">
+        <div className="modal-title">
+          <span>✦ 新增銷貨單</span>
+          <button className="btn btn-sm" onClick={onClose}>✕ 關閉</button>
+        </div>
+        <div className="form-grid g3" style={{marginBottom:12}}>
+          <div><label>客戶名稱</label>
+            <select value={cid} onChange={e=>handleCust(e.target.value)}>
+              {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div><label>日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div><label>銷貨單號（自動產生）</label>
+            <input readOnly value={date?getON(date):''} style={{background:'#f8fafd',color:'#1a2744',fontWeight:500}}/>
+          </div>
+        </div>
+        {cust&&cust.phone&&<div style={{fontSize:11,color:'#666',marginBottom:10,background:'#f8fafd',padding:'6px 10px',borderRadius:6}}>
+          👤 {cust.contact}　📞 {cust.phone}　📍 {cust.address}
+        </div>}
+
+        <div className="section-hdr">商品項目</div>
+        <div style={{overflowX:'auto'}}>
+          <table className="items-table">
+            <thead><tr>
+              <th style={{width:30}}>No.</th><th style={{minWidth:120}}>產品</th><th style={{width:55}}>顏色</th>
+              <th style={{width:70}}>尺寸(CM)</th><th style={{width:50}}>數量</th>
+              <th style={{width:65}}>單價/cm</th><th style={{width:75}}>金額(NT$)</th><th style={{width:35}}></th>
+            </tr></thead>
+            <tbody>
+              {items.map((item,idx)=>{const isSimple=['運費','L角配件','人工費'].includes(item.product);return(
+                <tr key={item.id}>
+                  <td style={{color:'#999'}}>{idx+1}</td>
+                  <td><select value={item.product} onChange={e=>updItem(idx,'product',e.target.value)}>
+                    {products.map(p=><option key={p.id}>{p.name}</option>)}
+                  </select></td>
+                  {isSimple?(
+                    <><td colSpan={4} style={{textAlign:'center',color:'#ccc',fontSize:11}}>—</td>
+                    <td><input type="number" value={item.amount} onChange={e=>updItem(idx,'amount',e.target.value)}/></td></>
+                  ):(
+                    <>
+                    <td><select value={item.color} onChange={e=>updItem(idx,'color',e.target.value)}>
+                      {COLORS.map(c=><option key={c}>{c}</option>)}
+                    </select></td>
+                    <td><input type="number" value={item.size} min="1" onChange={e=>updItem(idx,'size',e.target.value)}/></td>
+                    <td><input type="number" value={item.qty} min="1" onChange={e=>updItem(idx,'qty',e.target.value)}/></td>
+                    <td><input type="number" step="0.1" value={item.unitPrice} onChange={e=>updItem(idx,'unitPrice',e.target.value)}/></td>
+                    <td><input type="number" value={item.amount} onChange={e=>updItem(idx,'amount',e.target.value)}/></td>
+                    </>
+                  )}
+                  <td><button className="btn btn-danger btn-sm" onClick={()=>delItem(idx)}>✕</button></td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+        </div>
+
+        <div style={{display:'flex',gap:10,marginTop:10,alignItems:'center',flexWrap:'wrap'}}>
+          <button className="btn btn-sm" onClick={addItem}>＋ 新增品項</button>
+          <div style={{marginLeft:'auto',display:'flex',gap:16,alignItems:'center'}}>
+            <label style={{display:'flex',gap:6,alignItems:'center',width:'auto'}}>
+              <span style={{fontSize:12,whiteSpace:'nowrap',color:'#666'}}>運費</span>
+              <input type="number" value={shipping} onChange={e=>setShipping(e.target.value)} style={{width:80}}/>
+            </label>
+            <div style={{fontWeight:500,fontSize:13}}>
+              小計：<span style={{color:'#c9a84c'}}>{fmtN(subtotal)}</span>
+              　合計：<span style={{color:'#c0392b',fontSize:16,fontWeight:600}}>{fmtN(total)}</span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <label>備註</label>
+          <input value={note} onChange={e=>setNote(e.target.value)} placeholder="選填備註"/>
+        </div>
+
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',borderTop:'1px solid #eef1f6',paddingTop:12}}>
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={handleSave}>💾 儲存銷貨單</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== EDIT ORDER MODAL ===== */
+function EditOrderModal({order,customers,prices,products,onUpdate,onClose}){
+  const[cid,setCid]=useState(order.customerId);
+  const[date,setDate]=useState(order.date);
+  const[items,setItems]=useState(order.items||[]);
+  const[shipping,setShipping]=useState(order.shipping||0);
+  const[note,setNote]=useState(order.note||'');
+  const cust=customers.find(c=>c.id===cid)||customers[0];
+  const defProd=products[0]?.name||'ㄇ 6*6*6';
+
+  const updItem=(idx,field,val)=>{
+    setItems(prev=>{
+      const arr=[...prev];
+      arr[idx]={...arr[idx],[field]:['size','qty','amount','unitPrice'].includes(field)?Number(val)||0:val};
+      return arr;
+    });
+  };
+
+  const addItem=()=>setItems(prev=>[...prev,{id:uid(),product:defProd,color:'白',size:160,qty:1,unitPrice:0,amount:0}]);
+
+  const delItem=idx=>setItems(prev=>prev.filter((_,i)=>i!==idx));
+
+  const handleCust=v=>setCid(v);
+
+  const subtotal=items.reduce((s,i)=>s+i.amount,0);
+  const total=subtotal+Number(shipping||0);
+
+  const handleSave=()=>{
+    if(!cid||!date)return alert('請選擇客戶和日期');
+    if(items.length===0)return alert('請新增至少一個商品');
+    const updated={...order,customerId:cid,date,orderNumber:getON(date),
+      items:items.map((it,i)=>({...it,no:i+1})),
+      extras:[],shipping:Number(shipping)||0,total,note};
+    onUpdate(updated);onClose();
+  };
+
+  return(
+    <div className="modal-bg">
+      <div className="modal">
+        <div className="modal-title">
+          <span>✏️ 編輯銷貨單</span>
+          <button className="btn btn-sm" onClick={onClose}>✕ 關閉</button>
+        </div>
+        <div className="form-grid g3" style={{marginBottom:12}}>
+          <div><label>客戶名稱</label>
+            <select value={cid} onChange={e=>handleCust(e.target.value)}>
+              {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div><label>日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div><label>銷貨單號（自動產生）</label>
+            <input readOnly value={date?getON(date):''} style={{background:'#f8fafd',color:'#1a2744',fontWeight:500}}/>
+          </div>
+        </div>
+        {cust&&cust.phone&&<div style={{fontSize:11,color:'#666',marginBottom:10,background:'#f8fafd',padding:'6px 10px',borderRadius:6}}>
+          👤 {cust.contact}　📞 {cust.phone}　📍 {cust.address}
+        </div>}
+        <div className="section-hdr">商品項目</div>
+        <div style={{overflowX:'auto'}}>
+          <table className="items-table">
+            <thead><tr>
+              <th style={{width:30}}>No.</th><th style={{minWidth:120}}>產品</th><th style={{width:55}}>顏色</th>
+              <th style={{width:70}}>尺寸(CM)</th><th style={{width:50}}>數量</th>
+              <th style={{width:65}}>單價/cm</th><th style={{width:75}}>金額(NT$)</th><th style={{width:35}}></th>
+            </tr></thead>
+            <tbody>
+              {items.map((item,idx)=>{const isSimple=['運費','L角配件','人工費'].includes(item.product);return(
+                <tr key={item.id}>
+                  <td style={{color:'#999'}}>{idx+1}</td>
+                  <td><select value={item.product} onChange={e=>updItem(idx,'product',e.target.value)}>
+                    {products.map(p=><option key={p.id}>{p.name}</option>)}
+                  </select></td>
+                  {isSimple?(
+                    <><td colSpan={4} style={{textAlign:'center',color:'#ccc',fontSize:11}}>—</td>
+                    <td><input type="number" value={item.amount} onChange={e=>updItem(idx,'amount',e.target.value)}/></td></>
+                  ):(
+                    <>
+                    <td><select value={item.color} onChange={e=>updItem(idx,'color',e.target.value)}>
+                      {COLORS.map(c=><option key={c}>{c}</option>)}
+                    </select></td>
+                    <td><input type="number" value={item.size} min="1" onChange={e=>updItem(idx,'size',e.target.value)}/></td>
+                    <td><input type="number" value={item.qty} min="1" onChange={e=>updItem(idx,'qty',e.target.value)}/></td>
+                    <td><input type="number" step="0.1" value={item.unitPrice} onChange={e=>updItem(idx,'unitPrice',e.target.value)}/></td>
+                    <td><input type="number" value={item.amount} onChange={e=>updItem(idx,'amount',e.target.value)}/></td>
+                    </>
+                  )}
+                  <td><button className="btn btn-danger btn-sm" onClick={()=>delItem(idx)}>✕</button></td>
+                </tr>
+              );})}
+            </tbody>
+          </table>
+        </div>
+        <div style={{display:'flex',gap:10,marginTop:10,alignItems:'center',flexWrap:'wrap'}}>
+          <button className="btn btn-sm" onClick={addItem}>＋ 新增品項</button>
+          <div style={{marginLeft:'auto',display:'flex',gap:16,alignItems:'center'}}>
+            <label style={{display:'flex',gap:6,alignItems:'center',width:'auto'}}>
+              <span style={{fontSize:12,whiteSpace:'nowrap',color:'#666'}}>運費</span>
+              <input type="number" value={shipping} onChange={e=>setShipping(e.target.value)} style={{width:80}}/>
+            </label>
+            <div style={{fontWeight:500,fontSize:13}}>
+              小計：<span style={{color:'#c9a84c'}}>{fmtN(subtotal)}</span>
+              　合計：<span style={{color:'#c0392b',fontSize:16,fontWeight:600}}>{fmtN(total)}</span>
+            </div>
+          </div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <label>備註</label>
+          <input value={note} onChange={e=>setNote(e.target.value)} placeholder="選填備註"/>
+        </div>
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end',borderTop:'1px solid #eef1f6',paddingTop:12}}>
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={handleSave}>💾 儲存變更</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== ORDER ROW ===== */
+function OrderRow({order,customers,onDelete,onExport,onEdit,canManage=true}){
+  const[exp,setExp]=useState(false);
+  const cust=customers.find(c=>c.id===order.customerId)||{name:'?',contact:'',phone:'',address:''};
+  return(
+    <>
+      <tr>
+        <td><span className="badge badge-blue">{order.orderNumber}</span></td>
+        <td style={{fontWeight:500}}>{cust.name}</td>
+        <td>{toROC(order.date)}</td>
+        <td style={{textAlign:'center'}}>{order.items?.length||0}</td>
+        <td style={{fontWeight:500,color:'#c9a84c',textAlign:'right'}}>{canManage?fmtN(order.total):'$$$$$'}</td>
+        <td>
+          <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+            <button className="btn btn-sm" onClick={()=>setExp(!exp)}>{exp?'▲':'▼'}</button>
+            {canManage&&<button className="btn btn-sm" onClick={()=>onEdit(order)}>✏️ 編輯</button>}
+            <button className="btn btn-sm" onClick={()=>printDoc(order,cust,false)}>🖨 銷貨單</button>
+            {canManage&&<button className="btn btn-sm" style={{background:'#faeeda',color:'#854f0b',border:'1px solid #e8c97a'}} onClick={()=>printDoc(order,cust,true)}>🖨 請款單</button>}
+            <button className="btn btn-sm" onClick={()=>onExport(order,cust,false,'xlsx')}>📥 Excel</button>
+            <button className="btn btn-sm" onClick={()=>onExport(order,cust,false,'html')}>📄 HTML</button>
+            {canManage&&<button className="btn btn-danger btn-sm" onClick={()=>onDelete(order.id)}>🗑</button>}
+          </div>
+        </td>
+      </tr>
+      {exp&&(
+        <tr><td colSpan={6} style={{background:'#f8fafd',padding:'10px 14px'}}>
+          <table style={{width:'100%',fontSize:11,borderCollapse:'collapse'}}>
+            <thead><tr style={{background:'#eef2f8'}}>
+              {['No.','產品','顏色','尺寸(CM)','數量','單價','金額'].map(h=>(
+                <th key={h} style={{padding:'4px 8px',border:'1px solid #dde3ec',textAlign:'center'}}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {(order.items||[]).map(item=>(
+                <tr key={item.id}>
+                  {[item.no,item.product,item.color,item.size,item.qty,canManage?item.unitPrice:'$$$$$',canManage?fmtN(item.amount):'$$$$$'].map((v,i)=>(
+                    <td key={i} style={{padding:'4px 8px',border:'1px solid #eef1f6',textAlign:'center'}}>{v}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{marginTop:6,fontSize:11,color:'#666',display:'flex',gap:20}}>
+            {order.shipping>0&&<span>運費：{canManage?`NT$ ${fmtN(order.shipping)}`:'$$$$$'}</span>}
+            {order.note&&<span>備註：{order.note}</span>}
+            {order.extras?.length>0&&<span>附加：{order.extras.map(e=>`${e.label} ${e.color||''} x${e.qty}`).join('、')}</span>}
+          </div>
+        </td></tr>
+      )}
+    </>
+  );
+}
+
+/* ===== PURCHASE ORDER VIEW ===== */
+function NewPOModal({onSave,onClose}){
+  const[supplier,setSupplier]=useState('');
+  const[date,setDate]=useState(today());
+  const[dueDate,setDueDate]=useState('');
+  const[payMethod,setPayMethod]=useState('轉帳');
+  const[note,setNote]=useState('');
+  const[items,setItems]=useState([{id:uid(),spec:'',qty:1,unitPrice:0,amount:0}]);
+  const updItem=(idx,field,val)=>{
+    setItems(prev=>{
+      const arr=[...prev];
+      const num=['qty','unitPrice','amount'].includes(field)?Number(val)||0:val;
+      arr[idx]={...arr[idx],[field]:num};
+      return arr;
+    });
+  };
+  const addItem=()=>setItems(prev=>[...prev,{id:uid(),spec:'',qty:1,unitPrice:0,amount:0}]);
+  const delItem=idx=>setItems(prev=>prev.filter((_,i)=>i!==idx));
+  const total=items.reduce((s,i)=>s+(i.amount||0),0);
+  const handleSave=()=>{
+    if(!supplier.trim())return alert('請輸入供應商名稱');
+    onSave({id:uid(),supplier:supplier.trim(),date,dueDate,payMethod,note,items,total});
+  };
+  return(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:680}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header"><div className="modal-title">📦 新增訂購單</div><button className="btn" onClick={onClose}>✕</button></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10,marginBottom:12}}>
+          <div><label>供應商名稱</label><input value={supplier} onChange={e=>setSupplier(e.target.value)} placeholder="供應商"/></div>
+          <div><label>訂購日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div><label>應匯款日期</label><input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></div>
+          <div><label>付款方式</label>
+            <select value={payMethod} onChange={e=>setPayMethod(e.target.value)}>
+              <option>轉帳</option><option>現金</option>
+            </select>
+          </div>
+        </div>
+        <div style={{marginBottom:8,fontWeight:600}}>訂購項目</div>
+        <div style={{overflowX:'auto'}}>
+          <table className="data" style={{marginBottom:8}}>
+            <thead><tr><th>#</th><th>品名規格</th><th>數量</th><th>單價</th><th>金額</th><th></th></tr></thead>
+            <tbody>
+              {items.map((it,idx)=>(
+                <tr key={it.id}>
+                  <td style={{textAlign:'center',color:'#999',width:30}}>{idx+1}</td>
+                  <td><input value={it.spec} onChange={e=>updItem(idx,'spec',e.target.value)} style={{width:'100%'}} placeholder="品名/規格"/></td>
+                  <td><input type="number" value={it.qty} min="1" onChange={e=>updItem(idx,'qty',e.target.value)} style={{width:60}}/></td>
+                  <td><input type="number" value={it.unitPrice} min="0" step="0.1" onChange={e=>updItem(idx,'unitPrice',e.target.value)} style={{width:80}}/></td>
+                  <td><input type="number" value={it.amount} min="0" onChange={e=>updItem(idx,'amount',e.target.value)} style={{width:90}}/></td>
+                  <td><button className="btn" style={{color:'#c00',padding:'2px 8px'}} onClick={()=>delItem(idx)}>✕</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button className="btn" style={{marginBottom:12}} onClick={addItem}>＋ 新增項目</button>
+        <div style={{textAlign:'right',fontWeight:700,fontSize:15,marginBottom:12}}>合計：NT$ {fmtN(total)}</div>
+        <div><label>備註</label><textarea value={note} onChange={e=>setNote(e.target.value)} rows={2} style={{width:'100%'}}/></div>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:12}}>
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={handleSave}>儲存訂購單</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EditPOModal({po,onUpdate,onClose}){
+  const[supplier,setSupplier]=useState(po.supplier||'');
+  const[date,setDate]=useState(po.date||today());
+  const[dueDate,setDueDate]=useState(po.dueDate||'');
+  const[payMethod,setPayMethod]=useState(po.payMethod||'轉帳');
+  const[note,setNote]=useState(po.note||'');
+  const[items,setItems]=useState(po.items||[]);
+  const updItem=(idx,field,val)=>{
+    setItems(prev=>{
+      const arr=[...prev];
+      const num=['qty','unitPrice','amount'].includes(field)?Number(val)||0:val;
+      arr[idx]={...arr[idx],[field]:num};
+      return arr;
+    });
+  };
+  const addItem=()=>setItems(prev=>[...prev,{id:uid(),spec:'',qty:1,unitPrice:0,amount:0}]);
+  const delItem=idx=>setItems(prev=>prev.filter((_,i)=>i!==idx));
+  const total=items.reduce((s,i)=>s+(i.amount||0),0);
+  const handleSave=()=>{
+    if(!supplier.trim())return alert('請輸入供應商名稱');
+    onUpdate({...po,supplier:supplier.trim(),date,dueDate,payMethod,note,items,total});
+  };
+  return(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:680}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header"><div className="modal-title">📦 編輯訂購單</div><button className="btn" onClick={onClose}>✕</button></div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:10,marginBottom:12}}>
+          <div><label>供應商名稱</label><input value={supplier} onChange={e=>setSupplier(e.target.value)} placeholder="供應商"/></div>
+          <div><label>訂購日期</label><input type="date" value={date} onChange={e=>setDate(e.target.value)}/></div>
+          <div><label>應匯款日期</label><input type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></div>
+          <div><label>付款方式</label>
+            <select value={payMethod} onChange={e=>setPayMethod(e.target.value)}>
+              <option>轉帳</option><option>現金</option>
+            </select>
+          </div>
+        </div>
+        <div style={{marginBottom:8,fontWeight:600}}>訂購項目</div>
+        <div style={{overflowX:'auto'}}>
+          <table className="data" style={{marginBottom:8}}>
+            <thead><tr><th>#</th><th>品名規格</th><th>數量</th><th>單價</th><th>金額</th><th></th></tr></thead>
+            <tbody>
+              {items.map((it,idx)=>(
+                <tr key={it.id}>
+                  <td style={{textAlign:'center',color:'#999',width:30}}>{idx+1}</td>
+                  <td><input value={it.spec} onChange={e=>updItem(idx,'spec',e.target.value)} style={{width:'100%'}} placeholder="品名/規格"/></td>
+                  <td><input type="number" value={it.qty} min="1" onChange={e=>updItem(idx,'qty',e.target.value)} style={{width:60}}/></td>
+                  <td><input type="number" value={it.unitPrice} min="0" step="0.1" onChange={e=>updItem(idx,'unitPrice',e.target.value)} style={{width:80}}/></td>
+                  <td><input type="number" value={it.amount} min="0" onChange={e=>updItem(idx,'amount',e.target.value)} style={{width:90}}/></td>
+                  <td><button className="btn" style={{color:'#c00',padding:'2px 8px'}} onClick={()=>delItem(idx)}>✕</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <button className="btn" style={{marginBottom:12}} onClick={addItem}>＋ 新增項目</button>
+        <div style={{textAlign:'right',fontWeight:700,fontSize:15,marginBottom:12}}>合計：NT$ {fmtN(total)}</div>
+        <div><label>備註</label><textarea value={note} onChange={e=>setNote(e.target.value)} rows={2} style={{width:'100%'}}/></div>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:12}}>
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={handleSave}>儲存訂購單</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PurchaseView({purchases,setPurchases}){
+  const[showNew,setShowNew]=useState(false);
+  const[editPO,setEditPO]=useState(null);
+  const[filterSupplier,setFilterSupplier]=useState('');
+  const[filterPayMethod,setFilterPayMethod]=useState('');
+  const[filterPaid,setFilterPaid]=useState('');
+  const savePO=po=>{const u=[po,...purchases];setPurchases(u);DB.save('yl-purchases',u);setShowNew(false);};
+  const updatePO=po=>{const u=purchases.map(p=>p.id===po.id?po:p);setPurchases(u);DB.save('yl-purchases',u);setEditPO(null);};
+  const delPO=id=>{if(!confirm('確定刪除此訂購單？'))return;const u=purchases.filter(p=>p.id!==id);setPurchases(u);DB.save('yl-purchases',u);};
+  const togglePaid=po=>{const u=purchases.map(p=>p.id===po.id?{...p,paid:!po.paid,paidDate:!po.paid?today():''}:p);setPurchases(u);DB.save('yl-purchases',u);};
+  const suppliers=[...new Set(purchases.map(p=>p.supplier))].filter(Boolean);
+  const filt=purchases
+    .filter(p=>(!filterSupplier||p.supplier===filterSupplier)&&(!filterPayMethod||p.payMethod===filterPayMethod)&&(filterPaid===''||(filterPaid==='paid'?p.paid:!p.paid)))
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const totalAmt=purchases.reduce((s,p)=>s+(p.total||0),0);
+  const paidAmt=purchases.filter(p=>p.paid).reduce((s,p)=>s+(p.total||0),0);
+  const unpaidAmt=purchases.filter(p=>!p.paid).reduce((s,p)=>s+(p.total||0),0);
+  return(
+    <div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-val">{purchases.length}</div><div className="stat-lbl">訂購總數</div></div>
+        <div className="stat-card"><div className="stat-val" style={{color:'#1a2744',fontSize:17}}>NT$ {fmtN(totalAmt)}</div><div className="stat-lbl">訂購總金額</div></div>
+        <div className="stat-card"><div className="stat-val" style={{color:'#27ae60',fontSize:17}}>NT$ {fmtN(paidAmt)}</div><div className="stat-lbl">已匯款金額</div></div>
+        <div className="stat-card"><div className="stat-val" style={{color:'#c0392b',fontSize:17}}>NT$ {fmtN(unpaidAmt)}</div><div className="stat-lbl">未匯款金額</div></div>
+      </div>
+      <div className="card">
+        <div style={{display:'flex',gap:10,marginBottom:12,alignItems:'flex-end',flexWrap:'wrap'}}>
+          <div><label>篩選供應商</label>
+            <select value={filterSupplier} onChange={e=>setFilterSupplier(e.target.value)} style={{width:140}}>
+              <option value="">全部供應商</option>
+              {suppliers.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+          <div><label>付款方式</label>
+            <select value={filterPayMethod} onChange={e=>setFilterPayMethod(e.target.value)} style={{width:100}}>
+              <option value="">全部</option>
+              <option>轉帳</option><option>現金</option>
+            </select>
+          </div>
+          <div><label>匯款狀態</label>
+            <select value={filterPaid} onChange={e=>setFilterPaid(e.target.value)} style={{width:100}}>
+              <option value="">全部</option>
+              <option value="unpaid">未匯款</option>
+              <option value="paid">已匯款</option>
+            </select>
+          </div>
+          <button className="btn btn-primary" style={{alignSelf:'flex-end'}} onClick={()=>setShowNew(true)}>＋ 新增訂購單</button>
+          <div style={{marginLeft:'auto',alignSelf:'flex-end',fontSize:12,color:'#999'}}>共 {filt.length} 筆　合計 NT$ {fmtN(filt.reduce((s,p)=>s+(p.total||0),0))}</div>
+        </div>
+        {filt.length>0?(
+          <div style={{overflowX:'auto'}}>
+            <table className="data">
+              <thead><tr><th>供應商</th><th>訂購日期</th><th>應匯款日期</th><th>付款方式</th><th>匯款狀態</th><th>項目數</th><th>合計（NT$）</th><th>備註</th><th>操作</th></tr></thead>
+              <tbody>
+                {filt.map(po=>(
+                  <React.Fragment key={po.id}>
+                    <tr style={{background:po.paid?'#f0faf3':'inherit'}}>
+                      <td>{po.supplier}</td>
+                      <td>{toROC(po.date)}</td>
+                      <td style={{color:!po.paid&&po.dueDate&&po.dueDate<today()?'#c0392b':'inherit',fontWeight:!po.paid&&po.dueDate&&po.dueDate<today()?600:'normal'}}>{po.dueDate?toROC(po.dueDate):'—'}</td>
+                      <td><span style={{background:po.payMethod==='現金'?'#8e44ad':'#2980b9',color:'#fff',borderRadius:4,padding:'2px 8px',fontSize:12}}>{po.payMethod||'轉帳'}</span></td>
+                      <td>
+                        <button onClick={()=>togglePaid(po)} style={{cursor:'pointer',border:'none',background:'none',padding:0}}>
+                          <span style={{background:po.paid?'#27ae60':'#e74c3c',color:'#fff',borderRadius:4,padding:'3px 10px',fontSize:12,display:'inline-block'}}>
+                            {po.paid?'已匯款':'未匯款'}
+                          </span>
+                        </button>
+                        {po.paid&&po.paidDate&&<div style={{fontSize:10,color:'#888',marginTop:2}}>{toROC(po.paidDate)}</div>}
+                      </td>
+                      <td style={{textAlign:'center'}}>{po.items?.length||0}</td>
+                      <td style={{textAlign:'right',fontWeight:600}}>{fmtN(po.total||0)}</td>
+                      <td style={{color:'#888',fontSize:12}}>{po.note||'—'}</td>
+                      <td>
+                        <button className="btn" style={{marginRight:4}} onClick={()=>setEditPO(po)}>編輯</button>
+                        <button className="btn" style={{color:'#c00'}} onClick={()=>delPO(po.id)}>刪除</button>
+                      </td>
+                    </tr>
+                    {po.items?.length>0&&(
+                      <tr style={{background:'#f8f9fa'}}>
+                        <td colSpan={9} style={{padding:'4px 16px 8px'}}>
+                          <table style={{width:'100%',fontSize:12,borderCollapse:'collapse'}}>
+                            <thead><tr style={{color:'#888'}}><th style={{textAlign:'left',paddingRight:16}}>品名規格</th><th style={{textAlign:'right',paddingRight:16}}>數量</th><th style={{textAlign:'right',paddingRight:16}}>單價</th><th style={{textAlign:'right'}}>金額</th></tr></thead>
+                            <tbody>
+                              {po.items.map((it,i)=>(
+                                <tr key={it.id||i}>
+                                  <td style={{paddingRight:16}}>{it.spec||'—'}</td>
+                                  <td style={{textAlign:'right',paddingRight:16}}>{it.qty}</td>
+                                  <td style={{textAlign:'right',paddingRight:16}}>{it.unitPrice}</td>
+                                  <td style={{textAlign:'right'}}>{fmtN(it.amount)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ):(
+          <div className="empty">
+            <div style={{fontSize:40,marginBottom:10}}>📦</div>
+            <div style={{fontSize:15,marginBottom:6}}>尚無訂購單記錄</div>
+            <button className="btn btn-primary" style={{marginTop:8}} onClick={()=>setShowNew(true)}>＋ 新增第一筆訂購單</button>
+          </div>
+        )}
+      </div>
+      {showNew&&<NewPOModal onSave={savePO} onClose={()=>setShowNew(false)}/>}
+      {editPO&&<EditPOModal po={editPO} onUpdate={updatePO} onClose={()=>setEditPO(null)}/>}
+    </div>
+  );
+}
+
+/* ===== STATEMENT VIEW ===== */
+function StatementView({orders,customers,prices}){
+  const[cid,setCid]=useState('');const[month,setMonth]=useState('');
+  const months=[...new Set(orders.map(o=>toROCM(o.date)))].sort().reverse();
+  const filtered=orders.filter(o=>(!cid||o.customerId===cid)&&(!month||toROCM(o.date)===month));
+  const cust=customers.find(c=>c.id===cid);
+  const allItems=[];
+  filtered.forEach(o=>{
+    (o.items||[]).forEach(item=>allItems.push({...item,orderDate:o.date,orderNum:o.orderNumber}));
+    if(o.shipping>0)allItems.push({orderDate:o.date,orderNum:o.orderNumber,product:'運費',color:'',size:'',qty:1,unitPrice:'',amount:o.shipping});
+  });
+  const total=allItems.reduce((s,i)=>s+(i.amount||0),0);
+
+  const getStmtOrder=()=>({id:'stmt',customerId:cid,date:filtered[0]?.date||today(),orderNumber:'STMT',
+    items:allItems.filter(i=>i.product!=='運費'),
+    shipping:allItems.filter(i=>i.product==='運費').reduce((s,i)=>s+i.amount,0),total});
+
+  return(
+    <div>
+      <div className="card">
+        <div className="card-title">對帳單 / 請款單</div>
+        <div className="print-hint">💡 選擇客戶及月份後，系統自動合併當月訂單並帶入門檻價格，產生完整對帳單</div>
+        <div className="form-grid g3" style={{marginBottom:12}}>
+          <div><label>客戶</label>
+            <select value={cid} onChange={e=>setCid(e.target.value)}>
+              <option value="">— 全部客戶 —</option>
+              {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+          <div><label>月份（民國）</label>
+            <select value={month} onChange={e=>setMonth(e.target.value)}>
+              <option value="">— 全部月份 —</option>
+              {months.map(m=><option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div style={{display:'flex',alignItems:'flex-end',gap:6,flexWrap:'wrap'}}>
+            <button className="btn btn-gold" onClick={()=>{if(!cust||!month)return alert('請選擇客戶及月份');printDoc(getStmtOrder(),cust,true);}}>🖨 列印對帳單</button>
+            <button className="btn btn-sm" onClick={()=>{if(!cust||!month)return alert('請選擇客戶及月份');exportXLSX(getStmtOrder(),cust,true);}}>📥 Excel</button>
+            <button className="btn btn-sm" onClick={()=>{if(!cust||!month)return alert('請選擇客戶及月份');exportHTML(getStmtOrder(),cust,true);}}>📄 HTML</button>
+          </div>
+        </div>
+        {allItems.length>0?(
+          <div style={{overflowX:'auto'}}>
+            <table className="data">
+              <thead><tr><th>訂購日期</th><th>單號</th><th>產品規格</th><th>尺寸(CM)</th><th>數量</th><th>單價</th><th>金額(NT$)</th></tr></thead>
+              <tbody>
+                {allItems.map((item,i)=>(
+                  <tr key={i}>
+                    <td>{toROC(item.orderDate)}</td>
+                    <td><span className="badge badge-blue">{item.orderNum}</span></td>
+                    <td>{item.product} {item.color}</td>
+                    <td style={{textAlign:'center'}}>{item.size}</td>
+                    <td style={{textAlign:'center'}}>{item.qty}</td>
+                    <td style={{textAlign:'center'}}>{item.unitPrice}</td>
+                    <td style={{fontWeight:500,textAlign:'right'}}>{fmtN(item.amount)}</td>
+                  </tr>
+                ))}
+                <tr style={{background:'#f5f0e0',fontWeight:600}}>
+                  <td colSpan={6} style={{textAlign:'right',paddingRight:14}}>合計</td>
+                  <td style={{fontSize:15,color:'#c0392b',textAlign:'right'}}>{fmtN(total)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        ):<div className="empty">請選擇篩選條件以查看對帳資料</div>}
+      </div>
+    </div>
+  );
+}
+
+/* ===== MONTHLY REPORT ===== */
+function MonthlyReport({orders,customers,costs,purchases}){
+  const[month,setMonth]=useState('');
+  const months=[...new Set(orders.map(o=>toROCM(o.date)))].sort().reverse();
+  const filtered=month?orders.filter(o=>toROCM(o.date)===month):orders;
+  const filtPurchases=month?(purchases||[]).filter(p=>toROCM(p.date)===month):(purchases||[]);
+  const totalPurchase=filtPurchases.reduce((s,p)=>s+(p.total||0),0);
+  const byCustomer={};const bySpec={};
+  let totalRev=0,totalCost=0,totalQty=0;
+  filtered.forEach(o=>{
+    const cn=customers.find(c=>c.id===o.customerId)?.name||'未知';
+    if(!byCustomer[cn])byCustomer[cn]={name:cn,orders:0,revenue:0,qty:0};
+    byCustomer[cn].orders++;
+    (o.items||[]).forEach(item=>{
+      byCustomer[cn].revenue+=item.amount;byCustomer[cn].qty+=item.qty;
+      const key=`${item.product} ${item.color} ${item.size}cm`;
+      if(!bySpec[key])bySpec[key]={spec:key,qty:0,revenue:0,cost:0};
+      bySpec[key].qty+=item.qty;bySpec[key].revenue+=item.amount;
+      const cat=item.product;
+      bySpec[key].cost+=Math.round(item.size*(costs[cat]||0)*item.qty);
+      totalRev+=item.amount;totalQty+=item.qty;
+      totalCost+=Math.round(item.size*(costs[cat]||0)*item.qty);
+    });
+    if(o.shipping>0)totalRev+=o.shipping;
+  });
+  const custRows=Object.values(byCustomer).sort((a,b)=>b.revenue-a.revenue);
+  const specRows=Object.values(bySpec).sort((a,b)=>b.qty-a.qty);
+  const profit=totalRev-totalCost;
+  const netProfit=profit-totalPurchase;
+  const margin=totalRev>0?((profit/totalRev)*100).toFixed(1):0;
+  const netMargin=totalRev>0?((netProfit/totalRev)*100).toFixed(1):0;
+  return(
+    <div>
+      <div className="card">
+        <div className="card-title">月銷售報表</div>
+        <div style={{display:'flex',gap:10,marginBottom:14,alignItems:'flex-end'}}>
+          <div style={{width:200}}>
+            <label>月份（民國）</label>
+            <select value={month} onChange={e=>setMonth(e.target.value)}>
+              <option value="">— 全部月份（累計）—</option>
+              {months.map(m=><option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+        </div>
+        <div className="stat-grid">
+          <div className="stat-card"><div className="stat-val">{totalQty.toLocaleString()}</div><div className="stat-lbl">銷售總數量（條）</div></div>
+          <div className="stat-card"><div className="stat-val" style={{color:'#c9a84c',fontSize:18}}>NT$ {fmtN(totalRev)}</div><div className="stat-lbl">銷售總金額</div></div>
+          <div className="stat-card"><div className="stat-val" style={{color:'#c0392b',fontSize:18}}>NT$ {fmtN(totalPurchase)}</div><div className="stat-lbl">訂購進貨金額（－）</div></div>
+          <div className="stat-card"><div className="stat-val" style={{color:'#27ae60',fontSize:18}}>NT$ {fmtN(netProfit)}</div><div className="stat-lbl">淨利（{netMargin}%）</div></div>
+        </div>
+        <div style={{background:'#f8f9fa',borderRadius:6,padding:'8px 14px',marginBottom:12,fontSize:13,color:'#555',display:'flex',gap:24,flexWrap:'wrap'}}>
+          <span>估算成本（依成本價）：<strong>NT$ {fmtN(totalCost)}</strong></span>
+          <span>毛利：<strong style={{color:'#27ae60'}}>NT$ {fmtN(profit)}（{margin}%）</strong></span>
+          <span>訂購進貨扣除：<strong style={{color:'#c0392b'}}>－ NT$ {fmtN(totalPurchase)}</strong></span>
+          <span>淨利：<strong style={{color:netProfit>=0?'#27ae60':'#c0392b'}}>NT$ {fmtN(netProfit)}（{netMargin}%）</strong></span>
+        </div>
+        <div className="section-hdr">各客戶銷售統計</div>
+        {custRows.length>0?(
+          <table className="data" style={{marginBottom:14}}>
+            <thead><tr><th>客戶名稱</th><th>訂單數</th><th>數量（條）</th><th>銷售金額（NT$）</th></tr></thead>
+            <tbody>{custRows.map(r=>(
+              <tr key={r.name}>
+                <td><span className="badge badge-blue">{r.name}</span></td>
+                <td style={{textAlign:'center'}}>{r.orders}</td>
+                <td style={{textAlign:'center'}}>{r.qty}</td>
+                <td style={{fontWeight:500,color:'#c9a84c',textAlign:'right'}}>{fmtN(r.revenue)}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        ):<div className="empty">無銷售資料</div>}
+        <div className="section-hdr">各規格銷售統計</div>
+        {specRows.length>0?(
+          <table className="data">
+            <thead><tr><th>規格</th><th>數量（條）</th><th>銷售金額</th><th>估算成本</th><th>毛利</th></tr></thead>
+            <tbody>{specRows.map(r=>(
+              <tr key={r.spec}>
+                <td>{r.spec}</td>
+                <td style={{textAlign:'center'}}>{r.qty}</td>
+                <td style={{fontWeight:500,color:'#c9a84c',textAlign:'right'}}>{fmtN(r.revenue)}</td>
+                <td style={{color:'#c0392b',textAlign:'right'}}>{fmtN(r.cost)}</td>
+                <td style={{color:'#27ae60',fontWeight:500,textAlign:'right'}}>{fmtN(r.revenue-r.cost)}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        ):<div className="empty">無銷售資料</div>}
+        <div style={{marginTop:10,fontSize:11,color:'#888',background:'#f8fafd',padding:'6px 10px',borderRadius:6}}>
+          ⚠️ 成本依「設定→成本價格」估算：{Object.entries(costs).map(([k,v])=>`${k}=${v}`).join('、')}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== RECEIVABLES ===== */
+function ReceivablesView({orders,customers,receivables,setReceivables}){
+  const[filterMonth,setFilterMonth]=useState('');
+  const[filterStatus,setFilterStatus]=useState('');
+  const months=[...new Set(orders.map(o=>toROCM(o.date)))].sort().reverse();
+
+  const byKey={};
+  orders.forEach(o=>{
+    const month=toROCM(o.date);
+    const key=`${o.customerId}-${month}`;
+    if(!byKey[key])byKey[key]={customerId:o.customerId,month,total:0};
+    byKey[key].total+=(o.total||0);
+  });
+
+  const rows=Object.values(byKey)
+    .filter(r=>(!filterMonth||r.month===filterMonth))
+    .sort((a,b)=>b.month.localeCompare(a.month)||a.customerId.localeCompare(b.customerId));
+
+  const filtRows=filterStatus==='paid'?rows.filter(r=>receivables[`${r.customerId}-${r.month}`]?.paid)
+    :filterStatus==='unpaid'?rows.filter(r=>!receivables[`${r.customerId}-${r.month}`]?.paid)
+    :rows;
+
+  const totalAmt=rows.reduce((s,r)=>s+r.total,0);
+  const actualAmt=rows.reduce((s,r)=>s+(Number(receivables[`${r.customerId}-${r.month}`]?.actualAmt)||0),0);
+  const discountAmt=rows.reduce((s,r)=>s+(Number(receivables[`${r.customerId}-${r.month}`]?.discount)||0),0);
+  const unpaidAmt=rows.filter(r=>!receivables[`${r.customerId}-${r.month}`]?.paid).reduce((s,r)=>s+r.total,0);
+
+  const updRec=(key,field,val)=>{
+    const u={...receivables,[key]:{...(receivables[key]||{}),[field]:val}};
+    setReceivables(u);DB.save('yl-receivables',u);
+  };
+  const markPaid=(key,paid)=>{
+    const u={...receivables,[key]:{...(receivables[key]||{}),paid,paidDate:paid?today():''}};
+    setReceivables(u);DB.save('yl-receivables',u);
+  };
+
+  return(
+    <div>
+      <div className="stat-grid">
+        <div className="stat-card"><div className="stat-val" style={{fontSize:17}}>NT$ {fmtN(totalAmt)}</div><div className="stat-lbl">總應收金額</div></div>
+        <div className="stat-card"><div className="stat-val" style={{fontSize:17,color:'#3b6d11'}}>NT$ {fmtN(actualAmt)}</div><div className="stat-lbl">實收合計</div></div>
+        <div className="stat-card"><div className="stat-val" style={{fontSize:17,color:'#854f0b'}}>NT$ {fmtN(discountAmt)}</div><div className="stat-lbl">折讓合計</div></div>
+        <div className="stat-card"><div className="stat-val" style={{fontSize:17,color:'#c0392b'}}>NT$ {fmtN(unpaidAmt)}</div><div className="stat-lbl">未收款合計</div></div>
+      </div>
+      <div className="card">
+        <div style={{display:'flex',gap:10,marginBottom:12,flexWrap:'wrap',alignItems:'flex-end'}}>
+          <div><label>篩選月份</label>
+            <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} style={{width:120}}>
+              <option value="">全部月份</option>
+              {months.map(m=><option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          <div><label>收款狀態</label>
+            <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} style={{width:110}}>
+              <option value="">全部</option>
+              <option value="unpaid">未收款</option>
+              <option value="paid">已收款</option>
+            </select>
+          </div>
+          <div style={{marginLeft:'auto',fontSize:12,color:'#999',alignSelf:'flex-end'}}>共 {filtRows.length} 筆</div>
+        </div>
+        <div style={{overflowX:'auto'}}>
+          <table className="data">
+            <thead><tr>
+              <th>月份</th><th>客戶名稱</th><th style={{textAlign:'right'}}>應收金額（NT$）</th>
+              <th style={{textAlign:'center'}}>實收金額</th><th style={{textAlign:'center'}}>折讓</th>
+              <th style={{textAlign:'center'}}>收款方式</th><th style={{textAlign:'center'}}>狀態</th>
+              <th style={{textAlign:'center'}}>收款日期</th><th>操作</th>
+            </tr></thead>
+            <tbody>
+              {filtRows.length===0&&<tr><td colSpan={9} style={{textAlign:'center',color:'#999',padding:30}}>尚無資料</td></tr>}
+              {filtRows.map(r=>{
+                const key=`${r.customerId}-${r.month}`;
+                const rec=receivables[key]||{};
+                const cust=customers.find(c=>c.id===r.customerId);
+                return(
+                  <tr key={key} style={{background:rec.paid?'#f4fbf0':''}}>
+                    <td style={{whiteSpace:'nowrap'}}>{r.month}</td>
+                    <td style={{fontWeight:500}}>{cust?.name||'—'}</td>
+                    <td style={{textAlign:'right',fontWeight:500,color:rec.paid?'#3b6d11':'#c0392b'}}>
+                      NT$ {fmtN(r.total)}
+                    </td>
+                    <td style={{textAlign:'center'}}>
+                      <input type="number" style={{width:90,textAlign:'right'}} placeholder="0"
+                        value={rec.actualAmt||''} onChange={e=>{
+                          const actual=Number(e.target.value)||0;
+                          const disc=r.total-actual;
+                          const u={...receivables,[key]:{...(rec),actualAmt:e.target.value,discount:disc>0?disc:0}};
+                          setReceivables(u);DB.save('yl-receivables',u);
+                        }}/>
+                    </td>
+                    <td style={{textAlign:'center'}}>
+                      <input type="number" style={{width:80,textAlign:'right'}} placeholder="0"
+                        value={rec.discount||''} onChange={e=>updRec(key,'discount',e.target.value)}/>
+                    </td>
+                    <td style={{textAlign:'center'}}>
+                      <select value={rec.payMethod||''} onChange={e=>updRec(key,'payMethod',e.target.value)} style={{width:72,textAlign:'center',fontSize:12}}>
+                        <option value="">—</option>
+                        <option value="cash">現金</option>
+                        <option value="transfer">轉帳</option>
+                      </select>
+                    </td>
+                    <td style={{textAlign:'center'}}>
+                      <span className={`badge ${rec.paid?'badge-green':'badge-gold'}`}>{rec.paid?'已收款':'未收款'}</span>
+                    </td>
+                    <td style={{textAlign:'center',fontSize:12,color:'#666'}}>{rec.paidDate||'—'}</td>
+                    <td>
+                      {rec.paid
+                        ?<button className="btn btn-sm" onClick={()=>markPaid(key,false)}>撤銷</button>
+                        :<button className="btn btn-sm btn-primary" onClick={()=>markPaid(key,true)}>標記已收</button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== LOGIN MODAL ===== */
+function LoginModal({onLogin,onClose}){
+  const[pw,setPw]=useState('');
+  const[err,setErr]=useState('');
+  const handle=async()=>{
+    const stored=await DB.load('yl-password','0000');
+    if(pw===stored){onLogin();onClose();}
+    else{setErr('密碼錯誤，請重試');setPw('');}
+  };
+  return(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" style={{maxWidth:340}} onClick={e=>e.stopPropagation()}>
+        <div className="modal-header"><div className="modal-title">🔒 登入管理後台</div><button className="btn" onClick={onClose}>✕</button></div>
+        <div style={{marginBottom:14}}>
+          <label>密碼</label>
+          <input type="password" value={pw} onChange={e=>{setPw(e.target.value);setErr('');}} onKeyDown={e=>e.key==='Enter'&&handle()} autoFocus placeholder="請輸入密碼"/>
+          {err&&<div style={{color:'#c0392b',fontSize:12,marginTop:6}}>{err}</div>}
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',gap:8}}>
+          <button className="btn" onClick={onClose}>取消</button>
+          <button className="btn btn-primary" onClick={handle}>登入</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ===== SETTINGS ===== */
+function SettingsView({customers,setCustomers,prices,setPrices,costs,setCosts,products,setProducts,onLogout}){
+  const[tab,setTab]=useState('customers');
+  const[newC,setNewC]=useState({name:'',contact:'',phone:'',address:''});
+  const[editId,setEditId]=useState(null);
+  const[editData,setEditData]=useState({});
+  const cats=products.map(p=>p.name);
+  const priceCols=Object.keys(STD);
+  const addCust=()=>{
+    if(!newC.name.trim())return alert('請輸入客戶名稱');
+    const c={...newC,id:'c'+Date.now()};
+    const uc=[...customers,c];setCustomers(uc);DB.save('yl-customers-v4',uc);
+    if(!prices[c.name]){const up={...prices,[c.name]:{...STD}};setPrices(up);DB.save('yl-prices-v2',up);}
+    setNewC({name:'',contact:'',phone:'',address:''});
+  };
+  const delCust=id=>{if(!confirm('確定刪除？'))return;const u=customers.filter(c=>c.id!==id);setCustomers(u);DB.save('yl-customers-v4',u);};
+  const startEdit=c=>{setEditId(c.id);setEditData({name:c.name,contact:c.contact,phone:c.phone,address:c.address});};
+  const saveEdit=id=>{
+    if(!editData.name.trim())return alert('客戶名稱不能為空');
+    const old=customers.find(c=>c.id===id);
+    const u=customers.map(c=>c.id===id?{...c,...editData}:c);
+    setCustomers(u);DB.save('yl-customers-v4',u);
+    if(old.name!==editData.name){
+      const up={...prices,[editData.name]:prices[old.name]||{...STD}};
+      delete up[old.name];setPrices(up);DB.save('yl-prices-v2',up);
+    }
+    setEditId(null);
+  };
+  const updCost=(name,val)=>{const u={...costs,[name]:Number(val)||0};setCosts(u);DB.save('yl-costs',u);};
+  const updPrice=(cn,cat,val)=>{const u={...prices,[cn]:{...(prices[cn]||STD),[cat]:Number(val)||0}};setPrices(u);DB.save('yl-prices-v2',u);};
+  const[newProdName,setNewProdName]=useState('');
+  const addProd=()=>{
+    const n=newProdName.trim();
+    if(!n)return alert('請輸入產品名稱');
+    if(products.some(p=>p.name===n))return alert('此產品名稱已存在');
+    const u=[...products,{id:'p'+Date.now(),name:n}];
+    setProducts(u);DB.save('yl-products',u);
+    const uc={...costs,[n]:0};setCosts(uc);DB.save('yl-costs',uc);
+    setNewProdName('');
+  };
+  const delProd=(id)=>{
+    if(!confirm('確定刪除此產品？'))return;
+    const target=products.find(p=>p.id===id);
+    const u=products.filter(p=>p.id!==id);
+    setProducts(u);DB.save('yl-products',u);
+    if(target?.name){const uc={...costs};delete uc[target.name];setCosts(uc);DB.save('yl-costs',uc);}
+  };
+  return(
+    <div>
+      <div style={{display:'flex',gap:6,marginBottom:14}}>
+        {[['customers','👥 客戶管理'],['products','🏷️ 產品管理'],['prices','💲 門檻價格'],['password','🔒 密碼設定']].map(([k,l])=>(
+          <button key={k} className={`btn ${tab===k?'btn-primary':''}`} onClick={()=>setTab(k)}>{l}</button>
+        ))}
+      </div>
+      {tab==='customers'&&(
+        <div className="card">
+          <div className="card-title">客戶管理</div>
+          <div className="form-grid g4" style={{marginBottom:10}}>
+            <div><label>客戶名稱 *</label><input value={newC.name} onChange={e=>setNewC({...newC,name:e.target.value})} placeholder="必填"/></div>
+            <div><label>聯絡人</label><input value={newC.contact} onChange={e=>setNewC({...newC,contact:e.target.value})}/></div>
+            <div><label>電話</label><input value={newC.phone} onChange={e=>setNewC({...newC,phone:e.target.value})}/></div>
+            <div><label>送貨地址</label><input value={newC.address} onChange={e=>setNewC({...newC,address:e.target.value})}/></div>
+          </div>
+          <button className="btn btn-primary btn-sm" style={{marginBottom:12}} onClick={addCust}>＋ 新增客戶</button>
+          <div style={{overflowX:'auto'}}>
+            <table className="data">
+              <thead><tr><th>名稱</th><th>聯絡人</th><th>電話</th><th>地址</th><th></th></tr></thead>
+              <tbody>{customers.map(c=>(
+                <tr key={c.id}>
+                  {editId===c.id?(
+                    <>
+                      <td><input value={editData.name} onChange={e=>setEditData({...editData,name:e.target.value})} style={{width:'100%'}}/></td>
+                      <td><input value={editData.contact} onChange={e=>setEditData({...editData,contact:e.target.value})} style={{width:'100%'}}/></td>
+                      <td><input value={editData.phone} onChange={e=>setEditData({...editData,phone:e.target.value})} style={{width:'100%'}}/></td>
+                      <td><input value={editData.address} onChange={e=>setEditData({...editData,address:e.target.value})} style={{width:'100%'}}/></td>
+                      <td style={{whiteSpace:'nowrap'}}>
+                        <button className="btn btn-primary btn-sm" style={{marginRight:4}} onClick={()=>saveEdit(c.id)}>儲存</button>
+                        <button className="btn btn-sm" onClick={()=>setEditId(null)}>取消</button>
+                      </td>
+                    </>
+                  ):(
+                    <>
+                      <td style={{fontWeight:500}}>{c.name}</td><td>{c.contact}</td><td>{c.phone}</td>
+                      <td style={{fontSize:11,color:'#666'}}>{c.address}</td>
+                      <td style={{whiteSpace:'nowrap'}}>
+                        <button className="btn btn-sm" style={{marginRight:4}} onClick={()=>startEdit(c)}>編輯</button>
+                        <button className="btn btn-danger btn-sm" onClick={()=>delCust(c.id)}>刪除</button>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {tab==='prices'&&(
+        <div className="card">
+          <div className="card-title">門檻價格設定（NT$/cm/條）</div>
+          <div className="print-hint">💡 新增銷貨單時系統自動帶入此表的客戶售價</div>
+          <div style={{overflowX:'auto'}}>
+            <table className="data">
+              <thead><tr><th>客戶名稱</th>{priceCols.map(c=><th key={c} style={{textAlign:'center'}}>{c}</th>)}</tr></thead>
+              <tbody>{customers.map(c=>(
+                <tr key={c.id}>
+                  <td style={{fontWeight:500,whiteSpace:'nowrap'}}>{c.name}</td>
+                  {priceCols.map(cat=>(
+                    <td key={cat} style={{padding:'4px 6px'}}>
+                      <input type="number" step="0.1" style={{width:60,textAlign:'center'}}
+                        value={(prices[c.name]||STD)[cat]||''}
+                        onChange={e=>updPrice(c.name,cat,e.target.value)}/>
+                    </td>
+                  ))}
+                </tr>
+              ))}</tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {tab==='products'&&(
+        <div className="card">
+          <div className="card-title">產品管理</div>
+          <div className="print-hint">💡 新增產品後自動同步到銷貨單下拉選單；成本價用於月銷售報表毛利計算</div>
+          <div style={{display:'flex',gap:8,marginBottom:12,alignItems:'center'}}>
+            <input placeholder="輸入產品名稱" style={{width:200}} value={newProdName} onChange={e=>setNewProdName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addProd()}/>
+            <button className="btn btn-primary" onClick={addProd}>＋ 新增</button>
+          </div>
+          <table className="data" style={{maxWidth:480}}>
+            <thead><tr><th>產品名稱</th><th>成本價（NT$/cm）</th><th>操作</th></tr></thead>
+            <tbody>
+              {products.map(p=>(
+                <tr key={p.id}>
+                  <td style={{fontWeight:500}}>{p.name}</td>
+                  <td style={{padding:'5px 10px'}}>
+                    <input type="number" step="0.1" style={{width:100}} value={costs[p.name]||''} onChange={e=>updCost(p.name,e.target.value)}/>
+                  </td>
+                  <td><button className="btn btn-sm btn-danger" onClick={()=>delProd(p.id)}>刪除</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {tab==='password'&&(
+        <div className="card" style={{maxWidth:420}}>
+          <div className="card-title">🔒 密碼設定</div>
+          <PasswordTab onLogout={onLogout}/>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PasswordTab({onLogout}){
+  const[oldPw,setOldPw]=useState('');
+  const[newPw,setNewPw]=useState('');
+  const[confirmPw,setConfirmPw]=useState('');
+  const[msg,setMsg]=useState('');
+  const[isErr,setIsErr]=useState(false);
+  const save=async()=>{
+    const stored=await DB.load('yl-password','0000');
+    if(oldPw!==stored){setMsg('舊密碼錯誤');setIsErr(true);return;}
+    if(!newPw){setMsg('新密碼不能為空');setIsErr(true);return;}
+    if(newPw!==confirmPw){setMsg('新密碼與確認密碼不符');setIsErr(true);return;}
+    DB.save('yl-password',newPw);
+    setOldPw('');setNewPw('');setConfirmPw('');
+    setMsg('密碼已更新成功');setIsErr(false);
+  };
+  return(
+    <div>
+      <div style={{marginBottom:10}}><label>舊密碼</label><input type="password" value={oldPw} onChange={e=>{setOldPw(e.target.value);setMsg('');}} style={{maxWidth:240}}/></div>
+      <div style={{marginBottom:10}}><label>新密碼</label><input type="password" value={newPw} onChange={e=>{setNewPw(e.target.value);setMsg('');}} style={{maxWidth:240}}/></div>
+      <div style={{marginBottom:14}}><label>確認新密碼</label><input type="password" value={confirmPw} onChange={e=>{setConfirmPw(e.target.value);setMsg('');}} style={{maxWidth:240}}/></div>
+      {msg&&<div style={{marginBottom:10,fontSize:13,color:isErr?'#c0392b':'#27ae60'}}>{msg}</div>}
+      <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+        <button className="btn btn-primary" onClick={save}>更新密碼</button>
+        <button className="btn" style={{color:'#c0392b'}} onClick={onLogout}>登出</button>
+      </div>
+      <div style={{marginTop:14,fontSize:12,color:'#999'}}>預設密碼：0000</div>
+    </div>
+  );
+}
+
+/* ===== MAIN APP ===== */
+function App(){
+  const[loaded,setLoaded]=useState(false);
+  const[tab,setTab]=useState('orders');
+  const[orders,setOrders]=useState([]);
+  const[customers,setCustomers]=useState(INIT_C);
+  const[prices,setPrices]=useState(INIT_P);
+  const[costs,setCosts]=useState(INIT_COSTS);
+  const[products,setProducts]=useState(INIT_PRODS);
+  const[receivables,setReceivables]=useState({});
+  const[purchases,setPurchases]=useState([]);
+  const[loggedIn,setLoggedIn]=useState(false);
+  const[loginPw,setLoginPw]=useState('');const[loginErr,setLoginErr]=useState('');
+  const[showNew,setShowNew]=useState(false);
+  const[editOrder,setEditOrder]=useState(null);
+  const[filterCust,setFilterCust]=useState('');
+  const[filterMonth,setFilterMonth]=useState('');
+  const[sortDir,setSortDir]=useState('desc');
+  const logout=()=>{setLoggedIn(false);setTab('orders');setLoginPw('');setLoginErr('');};
+  const handleLogin=async()=>{const stored=await DB.load('yl-password','0000');if(loginPw===stored){setLoggedIn(true);setLoginErr('');}else{setLoginErr('密碼錯誤，請重試');setLoginPw('');}};
+
+  const PROTECTED_TABS=['purchase','statement','monthly','receivables','settings'];
+  const ALL_TABS=[['orders','📋 銷貨單管理'],['purchase','📦 訂購單管理'],['statement','📊 對帳單'],['monthly','📈 月銷售報表'],['receivables','💰 應收帳款'],['settings','⚙️ 設定']];
+  const visibleTabs=loggedIn?ALL_TABS:[['orders','📋 銷貨單管理']];
+
+  useEffect(()=>{
+    (async()=>{
+      const o=await DB.load('yl-orders-v4',INIT_ORDERS);
+      const c=await DB.load('yl-customers-v4',INIT_C);
+      const p=await DB.load('yl-prices-v2',INIT_P);
+      const cc=await DB.load('yl-costs',INIT_COSTS);
+      const pp=await DB.load('yl-products',INIT_PRODS);
+      const rv=await DB.load('yl-receivables',{});
+      const pu=await DB.load('yl-purchases',INIT_PURCHASES);
+      setOrders(o);setCustomers(c);setPrices(p);setCosts(cc);setProducts(pp);setReceivables(rv);setPurchases(pu);setLoaded(true);
+    })();
+  },[]);
+
+  const saveOrder=order=>{
+    const u=[order,...orders];setOrders(u);DB.save('yl-orders-v4',u);
+  };
+  const updateOrder=order=>{
+    const u=orders.map(o=>o.id===order.id?order:o);setOrders(u);DB.save('yl-orders-v4',u);
+  };
+  const delOrder=id=>{
+    if(!confirm('確定刪除此銷貨單？'))return;
+    const u=orders.filter(o=>o.id!==id);setOrders(u);DB.save('yl-orders-v4',u);
+  };
+  const handleExport=(order,cust,showPrices,fmt)=>{
+    if(fmt==='xlsx')exportXLSX(order,cust,showPrices);
+    else exportHTML(order,cust,showPrices);
+  };
+
+  const months=[...new Set(orders.map(o=>toROCM(o.date)))].sort().reverse();
+  const filtOrders=orders.filter(o=>(!filterCust||o.customerId===filterCust)&&(!filterMonth||toROCM(o.date)===filterMonth)).sort((a,b)=>sortDir==='desc'?b.date.localeCompare(a.date):a.date.localeCompare(b.date));
+  const totalRev=orders.reduce((s,o)=>s+(o.total||0),0);
+  const thisM=toROCM(today());
+  const thisMOrders=orders.filter(o=>toROCM(o.date)===thisM);
+  const thisMRev=thisMOrders.reduce((s,o)=>s+(o.total||0),0);
+
+  if(!loaded)return<div style={{textAlign:'center',padding:80,color:'#999'}}>載入中...</div>;
+
+  return(
+    <div id="root">
+      <div className="navbar">
+        <div>
+          <div className="navbar-brand">⚡ 勇龍有限公司 銷貨管理系統</div>
+          <div className="navbar-sub">YEONG LONG Ltd — Sales Management System</div>
+        </div>
+        {loggedIn&&<button className="btn" style={{color:'#f5d98a',borderColor:'rgba(245,217,138,0.4)'}} onClick={logout}>🔓 登出</button>}
+      </div>
+      {!loggedIn&&(
+        <div style={{padding:'16px 16px 0'}}>
+          <div className="card" style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',justifyContent:'space-between',padding:'12px 16px'}}>
+            <div style={{fontWeight:600,fontSize:14}}>🔒 請登入以使用完整功能</div>
+            <div style={{display:'flex',gap:8,alignItems:'center',flexWrap:'wrap'}}>
+              <input type="password" value={loginPw} onChange={e=>{setLoginPw(e.target.value);setLoginErr('');}} onKeyDown={e=>e.key==='Enter'&&handleLogin()} autoFocus placeholder="請輸入密碼" style={{maxWidth:160}}/>
+              <button className="btn btn-primary" onClick={handleLogin}>🔓 登入</button>
+              {loginErr&&<span style={{color:'#c0392b',fontSize:12}}>{loginErr}</span>}
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="nav-tabs">
+        {visibleTabs.map(([k,l])=>(
+          <button key={k} className={`nav-tab ${tab===k?'active':''}`} onClick={()=>setTab(k)}>{l}</button>
+        ))}
+      </div>
+      <div className="content">
+        {tab==='orders'&&(
+          <div>
+            <div className="stat-grid">
+              <div className="stat-card"><div className="stat-val">{orders.length}</div><div className="stat-lbl">總銷貨單數</div></div>
+              <div className="stat-card"><div className="stat-val">{thisMOrders.length}</div><div className="stat-lbl">本月銷貨單數</div></div>
+              <div className="stat-card"><div className="stat-val" style={{color:'#c9a84c',fontSize:17}}>{loggedIn?`NT$ ${fmtN(thisMRev)}`:'$$$$$'}</div><div className="stat-lbl">本月銷售金額</div></div>
+              <div className="stat-card"><div className="stat-val" style={{color:'#1a2744',fontSize:17}}>{loggedIn?`NT$ ${fmtN(totalRev)}`:'$$$$$'}</div><div className="stat-lbl">累計銷售金額</div></div>
+            </div>
+            <div className="card">
+              <div style={{display:'flex',gap:10,marginBottom:12,alignItems:'flex-end',flexWrap:'wrap'}}>
+                <div><label>篩選客戶</label>
+                  <select value={filterCust} onChange={e=>setFilterCust(e.target.value)} style={{width:140}}>
+                    <option value="">全部客戶</option>
+                    {customers.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div><label>篩選月份</label>
+                  <select value={filterMonth} onChange={e=>setFilterMonth(e.target.value)} style={{width:120}}>
+                    <option value="">全部月份</option>
+                    {months.map(m=><option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div><label>日期排序</label>
+                  <button className="btn" style={{alignSelf:'flex-end'}} onClick={()=>setSortDir(d=>d==='desc'?'asc':'desc')}>
+                    {sortDir==='desc'?'↓ 最新在前':'↑ 最舊在前'}
+                  </button>
+                </div>
+                {loggedIn&&<button className="btn btn-primary" style={{alignSelf:'flex-end'}} onClick={()=>setShowNew(true)}>＋ 新增銷貨單</button>}
+                <div style={{marginLeft:'auto',fontSize:12,color:'#999',alignSelf:'flex-end'}}>共 {filtOrders.length} 筆</div>
+              </div>
+              {filtOrders.length>0?(
+                <div style={{overflowX:'auto'}}>
+                  <table className="data">
+                    <thead><tr><th>銷貨單號</th><th>客戶名稱</th><th>日期</th><th>項目數</th><th>金額（NT$）</th><th>操作</th></tr></thead>
+                    <tbody>{filtOrders.map(o=><OrderRow key={o.id} order={o} customers={customers} onDelete={delOrder} onExport={handleExport} onEdit={setEditOrder} canManage={loggedIn}/>)}</tbody>
+                  </table>
+                </div>
+              ):(
+                <div className="empty">
+                  <div style={{fontSize:40,marginBottom:10}}>📋</div>
+                  <div style={{fontSize:15,marginBottom:6}}>尚無銷貨單記錄</div>
+                  {loggedIn&&<button className="btn btn-primary" style={{marginTop:8}} onClick={()=>setShowNew(true)}>＋ 新增第一筆銷貨單</button>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {tab==='purchase'&&<PurchaseView purchases={purchases} setPurchases={setPurchases}/>}
+        {tab==='statement'&&<StatementView orders={orders} customers={customers} prices={prices}/>}
+        {tab==='monthly'&&<MonthlyReport orders={orders} customers={customers} costs={costs} purchases={purchases}/>}
+        {tab==='receivables'&&<ReceivablesView orders={orders} customers={customers} receivables={receivables} setReceivables={setReceivables}/>}
+        {tab==='settings'&&<SettingsView customers={customers} setCustomers={setCustomers} prices={prices} setPrices={setPrices} costs={costs} setCosts={setCosts} products={products} setProducts={setProducts} onLogout={logout}/>}
+      </div>
+      {showNew&&<NewOrderModal customers={customers} prices={prices} products={products} onSave={saveOrder} onClose={()=>setShowNew(false)}/>}
+      {editOrder&&<EditOrderModal order={editOrder} customers={customers} prices={prices} products={products} onUpdate={updateOrder} onClose={()=>setEditOrder(null)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
